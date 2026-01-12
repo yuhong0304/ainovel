@@ -1,0 +1,56 @@
+# 番茄小说Agent配置文件
+# Novel Generation Agent Configuration
+
+# LLM 设置
+llm:
+  # 默认模型
+  model: "gemini-2.0-flash-exp"
+  
+  # 重试配置
+  max_retries: 3
+  retry_delay: 2  # 秒
+  
+  # 生成参数
+  default_temperature: 0.7
+  max_tokens: 8192
+
+# 小说参数
+novel:
+  # 字数设置
+  words_per_chapter: 3000
+  word_tolerance: 200  # 允许误差
+  
+  # 章节结构
+  chapters_per_script: 3  # 黄金三章
+  scripts_per_volume: 3   # 每卷剧本数
+
+# 文件路径
+paths:
+  prompts_dir: "prompts"
+  projects_dir: "projects"
+  stages_dir: "prompts/stages"
+  learned_dir: "prompts/learned"
+
+# 润色设置
+polish:
+  temperature: 0.5  # 较低温度，减少发挥
+  batch_size: 1500  # 分段润色字数
+
+# 学习设置
+learning:
+  temperature: 0.3  # 低温度，精确分析
+  min_diff_threshold: 10  # 最小差异字符数才触发学习
+
+# CLI 设置
+cli:
+  show_progress: true
+  auto_save: true
+  confirm_before_generate: true
+
+# Token 成本追踪 (按每百万token计算, USD)
+cost_tracking:
+  enabled: true
+  gemini_flash_input: 0.075
+  gemini_flash_output: 0.30
+  gemini_pro_input: 1.25
+  gemini_pro_output: 5.00

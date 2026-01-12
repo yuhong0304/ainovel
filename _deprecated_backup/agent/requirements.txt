@@ -1,0 +1,8 @@
+# Novel Generation Agent System
+# 番茄小说自动生成Agent系统
+
+google-generativeai>=0.8.0    # Gemini官方SDK
+jinja2>=3.0                   # 模板引擎
+rich>=13.0                    # 美化CLI输出
+pyyaml>=6.0                   # 配置文件解析
+python-dotenv>=1.0            # 环境变量管理
