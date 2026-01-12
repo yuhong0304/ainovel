@@ -56,4 +56,3 @@ projects/*
 !projects/.gitkeep
 
 # Legacy/Unused
-src/

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}仪表盘 - 番茄小说Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">📚 我的项目</h1>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="showCreateProjectModal()">
+            ✨ 创建新项目
+        </button>
+    </div>
+</div>
+
+<!-- 统计卡片 -->
+<div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+        <div class="stat-value" id="statProjects">-</div>
+        <div class="stat-label">项目数</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="statChapters">-</div>
+        <div class="stat-label">总章节</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="statTokens">-</div>
+        <div class="stat-label">Token使用</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="statCost">-</div>
+        <div class="stat-label">预估成本</div>
+    </div>
+</div>
+
+<!-- 项目列表 -->
+<div class="card-grid" id="projectsGrid">
+    <div class="loading">
+        <div class="spinner"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.initPage = async function () {
+        // 加载项目列表
+        loadProjects();
+
+        // 加载统计
+        try {
+            const { projects } = await API.getProjects();
+            const usage = await API.getUsage();
+
+            document.getElementById('statProjects').textContent = projects.length;
+            document.getElementById('statChapters').textContent =
+                projects.reduce((sum, p) => sum + (p.chapter_count || 0), 0);
+            document.getElementById('statTokens').textContent =
+                (usage.total_tokens || 0).toLocaleString();
+            document.getElementById('statCost').textContent =
+                '$' + (usage.total_cost_usd || 0).toFixed(2);
+        } catch (e) {
+            console.error('加载统计失败', e);
+        }
+    };
+</script>
+{% endblock %}
