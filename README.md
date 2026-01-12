@@ -47,15 +47,29 @@ GEMINI_MODEL=gemini-2.5-pro  # 支持 gemini-3.0-pro (experimental)
 
 ## 🚀 快速开始
 
-### 启动 Web 界面
+### 1. 启动 Web 界面 (推荐)
+安装完成后，直接运行：
 ```bash
 novel-web
 ```
-浏览器访问 `http://localhost:5000`。
+浏览器自动访问 `http://localhost:5000`。
+Web 界面提供完整的创作流管理、分屏编辑和实时预览功能。
 
-### 命令行模式
+### 2. 命令行模式 (CLI)
+如果你更习惯命令行交互：
 ```bash
 novel-agent
+```
+按提示输入指令即可进行创作。
+
+### 3. 本地开发
+如果你需要调试或修改代码：
+```bash
+# 运行 Web 服务
+python -m novel_agent.web.app
+
+# 运行 CLI
+python -m novel_agent.main
 ```
 
 ## 📂 项目结构
@@ -64,16 +78,17 @@ novel-agent
 novel_agent/
 ├── src/
 │   └── novel_agent/
-│       ├── core/           # 🧠 核心逻辑 (原 agent)
-│       ├── pipeline/       # ⛓️ 创作流水线 (Meta -> Master -> Volume -> ...)
-│       ├── prompts/        # 📝 提示词库
-│       ├── web/            # 🌐 Web 界面 (Flask)
-│       └── main.py         # 🚀 启动入口
-├── config/                 # ⚙️ 配置文件
-├── projects/               # 📚 小说存储目录
-├── docs/                   # 📖 文档
-├── requirements.txt        # 📦 依赖列表
-└── .env                    # 🔑 环境变量
+│       ├── core/           # 🧠 Core Architecture (Logic/Memory)
+│       ├── pipeline/       # ⛓️ Novel Generation Pipeline
+│       ├── prompts/        # 📝 System Prompts
+│       ├── utils/          # 🛠️ Utility Functions
+│       ├── web/            # 🌐 Web Interface (Flask)
+│       └── main.py         # 🚀 CLI Entry Point
+
+├── config/                 # ⚙️ Configuration Files
+├── projects/               # 📚 User Projects (Auto-generated)
+├── docs/                   # 📖 Documentation
+└── requirements.txt        # 📦 Dependencies
 ```
 
 ## 🤝 贡献指南
