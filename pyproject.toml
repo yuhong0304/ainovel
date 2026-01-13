@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "novel_agent"
+name = "novel-agent"
 version = "1.0.0"
 description = "A semi-automated AI novel generation system based on Gemini"
 readme = "README.md"
@@ -12,7 +12,7 @@ license = {text = "MIT"}
 authors = [
     {name = "yuhong", email = "sysbioyuh@gmail.com"}
 ]
-keywords = ["ai", "novel", "generation", "gemini", "rag", "llm", "writing"]
+keywords = ["ai", "novel", "generation", "gemini", "rag", "llm", "writing", "creative-writing"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -39,6 +39,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# 开发依赖
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -48,6 +49,35 @@ dev = [
     "pre-commit>=3.0",
     "build>=1.0",
     "twine>=4.0",
+]
+
+# 导出功能依赖
+export = [
+    "python-docx>=1.0",
+    "ebooklib>=0.18",
+]
+
+# 多模型支持
+openai = [
+    "openai>=1.0",
+    "tiktoken>=0.5",
+]
+
+claude = [
+    "anthropic>=0.18",
+]
+
+# 所有额外功能
+all = [
+    "novel-agent[export]",
+    "novel-agent[openai]",
+    "novel-agent[claude]",
+]
+
+# 完整安装（包含开发依赖）
+full = [
+    "novel-agent[all]",
+    "novel-agent[dev]",
 ]
 
 [project.scripts]
@@ -88,10 +118,11 @@ ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
+    "E402",  # module level import not at top of file
 ]
 
 [tool.ruff.per-file-ignores]
-"__init__.py" = ["F401"]  # unused imports in __init__.py are OK
+"__init__.py" = ["F401", "F403"]  # unused imports in __init__.py are OK
 
 [tool.ruff.isort]
 known-first-party = ["novel_agent"]
@@ -102,7 +133,7 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-exclude = ["tests/", "_deprecated_backup/"]
+exclude = ["tests/", "_deprecated_backup/", "build/", "dist/"]
 
 # Pytest 配置
 [tool.pytest.ini_options]
@@ -113,6 +144,7 @@ python_functions = ["test_*"]
 addopts = "-v --tb=short"
 filterwarnings = [
     "ignore::DeprecationWarning",
+    "ignore::UserWarning",
 ]
 
 # Coverage 配置
@@ -127,4 +159,5 @@ exclude_lines = [
     "def __repr__",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
+    "except ImportError",
 ]

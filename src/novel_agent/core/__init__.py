@@ -8,6 +8,7 @@ from .context import NovelContext
 from .gemini_client import GeminiClient
 from .prompt import PromptManager
 from .rag import RAGManager
+from .multi_llm import LLMClientFactory, OpenAIClient, ClaudeClient
 
 __all__ = [
     "ConfigLoader",
@@ -17,5 +18,9 @@ __all__ = [
     "GeminiClient",
     "PromptManager",
     "RAGManager",
+    "LLMClientFactory",
+    "OpenAIClient",
+    "ClaudeClient",
 ]
+
 
