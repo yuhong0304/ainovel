@@ -112,6 +112,59 @@ const API = {
         });
     },
 
+    // 导出
+    exportNovel(project, type) {
+        return this.request(`/api/export/${type}`, {
+            method: 'POST',
+            body: { project }
+        });
+    },
+
+    // 批量生成
+    createBatchJob(project, start, end, titles) {
+        return this.request('/api/batch/create', {
+            method: 'POST',
+            body: { project, start, end, titles }
+        });
+    },
+
+    // 世界书
+    getWorldCards(project) {
+        return this.request(`/api/world/${project}/cards`);
+    },
+
+    createWorldCard(project, data) {
+        return this.request(`/api/world/${project}/cards`, {
+            method: 'POST',
+            body: data
+        });
+    },
+
+    deleteWorldCard(project, cardId) {
+        return this.request(`/api/world/${project}/cards/${cardId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // 版本控制
+    getVersionedFiles(project) {
+        return this.request(`/api/versions/${project}/files`);
+    },
+
+    getFileVersions(project, path) {
+        return this.request(`/api/versions/${project}/list`, {
+            method: 'POST',
+            body: { path }
+        });
+    },
+
+    restoreVersion(project, path, versionId) {
+        return this.request(`/api/versions/${project}/restore`, {
+            method: 'POST',
+            body: { path, version_id: versionId }
+        });
+    },
+
     // 设置
     getModels() {
         return this.request('/api/settings/models');
@@ -791,6 +844,130 @@ function toggleFullscreen() {
     } else {
         document.exitFullscreen();
         isFullscreen = false;
+    }
+}
+
+
+// ============ Tab 切换 (New) ============
+
+function switchMainTab(tabId) {
+    // 切换 Tab 样式
+    document.querySelectorAll('.project-tab').forEach(el => {
+        el.classList.remove('active');
+        if (el.textContent.includes(
+            { editor: '编辑器', worldbook: '世界书', batch: '批量', versions: '版本', export: '导出' }[tabId]
+        )) {
+            el.classList.add('active');
+        }
+    });
+
+    // 切换内容显示
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.getElementById(`tab-${tabId}`).style.display = 'block';
+
+    // 特定 Tab 初始化
+    if (tabId === 'worldbook' && typeof loadWorldCards === 'function') {
+        loadWorldCards();
+    } else if (tabId === 'versions' && typeof loadVersionFileList === 'function') {
+        loadVersionFileList();
+    }
+}
+
+
+// ============ 导出功能 ============
+
+async function exportNovel(type) {
+    if (!currentProject) return;
+
+    const resultContainer = document.getElementById('exportResult');
+    resultContainer.innerHTML = '<div class="loading"><div class="spinner"></div> 正在导出...</div>';
+
+    try {
+        const result = await API.exportNovel(currentProject, type);
+
+        resultContainer.innerHTML = `
+            <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; text-align: center;">
+                <p>✅ 导出成功: <strong>${result.filename}</strong></p>
+                <a href="${result.url}" class="btn btn-primary" style="display: inline-block; margin-top: 12px;">
+                    ⬇️ 点击下载
+                </a>
+            </div>
+        `;
+        showToast('导出成功');
+
+    } catch (e) {
+        resultContainer.innerHTML = `<p style="color: var(--accent-primary)">导出失败: ${e.message}</p>`;
+    }
+}
+
+
+// ============ 批量生成功能 ============
+
+async function startBatchJob() {
+    if (!currentProject) return;
+
+    const start = document.getElementById('batchStart').value;
+    const end = document.getElementById('batchEnd').value;
+    const titles = document.getElementById('batchTitles').value.split('\n').filter(t => t.trim());
+
+    const logArea = document.getElementById('batchLog');
+    const progressArea = document.getElementById('batchProgressArea');
+    const progressBar = document.getElementById('batchTotalProgress');
+
+    progressArea.style.display = 'block';
+    logArea.innerHTML = '<div>🚀 正在创建任务...</div>';
+
+    try {
+        // 1. 创建任务
+        const { job_id, job } = await API.createBatchJob(currentProject, start, end, titles);
+        logArea.innerHTML += `<div>✅ 任务已创建: ${job_id} (共 ${job.total_chapters} 章)</div>`;
+
+        // 2. 开始执行 (SSE)
+        const response = await fetch('/api/batch/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_id })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const text = decoder.decode(value);
+            const lines = text.split('\n');
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.type === 'task_started') {
+                            logArea.innerHTML += `<div>▶️ 开始生成: ${data.task.title}</div>`;
+                        } else if (data.type === 'task_completed') {
+                            logArea.innerHTML += `<div style="color: #4caf50">✅ 完成: ${data.task.title}</div>`;
+                            progressBar.style.width = `${data.job_progress}%`;
+                        } else if (data.type === 'task_failed') {
+                            logArea.innerHTML += `<div style="color: var(--accent-primary)">❌ 失败: ${data.task.title} - ${data.task.error}</div>`;
+                        } else if (data.type === 'job_completed') {
+                            logArea.innerHTML += `<div style="margin-top: 10px; font-weight: bold;">🎉 所有任务完成！</div>`;
+                            progressBar.style.width = '100%';
+                            showToast('批量生成完成');
+                        }
+
+                        logArea.scrollTop = logArea.scrollHeight;
+
+                    } catch (e) { }
+                }
+            }
+        }
+
+    } catch (e) {
+        logArea.innerHTML += `<div style="color: var(--accent-primary)">❌ 错误: ${e.message}</div>`;
     }
 }
 

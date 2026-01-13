@@ -44,6 +44,13 @@ from novel_agent.pipeline import (
     PolishProcessor,
     RuleLearner
 )
+from novel_agent.utils import (
+    NovelExporter,
+    BatchGenerator,
+    WorldManager,
+    VersionManager,
+    StatsCollector
+)
 
 # ============ 配置 ============
 
@@ -1527,6 +1534,251 @@ def run_server():
             threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
         except:
             pass
+            
+    # ============ API: 导出 ============
+
+    @app.route('/api/export/txt', methods=['POST'])
+    def export_txt():
+        """导出为 TXT"""
+        data = request.json
+        project = data.get('project')
+        
+        try:
+            exporter = NovelExporter(PROJECTS_DIR / project)
+            path = exporter.export_txt()
+            
+            # 返回下载链接
+            filename = path.name
+            return jsonify({
+                "success": True,
+                "url": f"/api/download/{project}/{filename}",
+                "filename": filename
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+    @app.route('/api/export/docx', methods=['POST'])
+    def export_docx():
+        """导出为 DOCX"""
+        data = request.json
+        project = data.get('project')
+        
+        try:
+            exporter = NovelExporter(PROJECTS_DIR / project)
+            path = exporter.export_docx()
+            
+            filename = path.name
+            return jsonify({
+                "success": True,
+                "url": f"/api/download/{project}/{filename}",
+                "filename": filename
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+    @app.route('/api/export/epub', methods=['POST'])
+    def export_epub():
+        """导出为 EPUB"""
+        data = request.json
+        project = data.get('project')
+        
+        try:
+            exporter = NovelExporter(PROJECTS_DIR / project)
+            path = exporter.export_epub()
+            
+            filename = path.name
+            return jsonify({
+                "success": True,
+                "url": f"/api/download/{project}/{filename}",
+                "filename": filename
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+    @app.route('/api/download/<project>/<filename>')
+    def download_file(project, filename):
+        """下载导出文件"""
+        export_dir = PROJECTS_DIR / project / "exports"
+        return send_from_directory(export_dir, filename, as_attachment=True)
+
+
+    # ============ API: 批量生成 ============
+
+    @app.route('/api/batch/create', methods=['POST'])
+    def batch_create():
+        """创建批量任务"""
+        data = request.json
+        project = data.get('project')
+        start_chapter = int(data.get('start', 1))
+        end_chapter = int(data.get('end', 1))
+        titles = data.get('titles', [])
+        
+        try:
+            state.context_manager.load_project(project)
+            
+            batch_gen = BatchGenerator(
+                state.llm, state.prompt_manager, state.context_manager,
+                PROJECTS_DIR / project
+            )
+            
+            job = batch_gen.create_job(start_chapter, end_chapter, titles)
+            
+            # 存储job到全局状态（这里为了简单演示，直接存在state里，实际上应该持久化）
+            if not hasattr(state, 'batch_jobs'):
+                state.batch_jobs = {}
+            state.batch_jobs[job.job_id] = {
+                "job": job,
+                "generator": batch_gen
+            }
+            
+            return jsonify({
+                "success": True,
+                "job_id": job.job_id,
+                "job": batch_gen._job_to_dict(job)
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+    @app.route('/api/batch/start', methods=['POST'])
+    def batch_start():
+        """开始批量任务 (流式)"""
+        data = request.json
+        job_id = data.get('job_id')
+        
+        if not hasattr(state, 'batch_jobs') or job_id not in state.batch_jobs:
+            return jsonify({"error": "任务不存在"}), 404
+            
+        job_info = state.batch_jobs[job_id]
+        job = job_info['job']
+        generator = job_info['generator']
+        
+        def generate():
+            try:
+                for update in generator.run_job(job):
+                    yield f"data: {json.dumps(update)}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+                
+        return Response(
+            generate(),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+
+
+    # ============ API: 世界书 (Worldbook) ============
+
+    @app.route('/api/world/<project>/cards', methods=['GET'])
+    def get_world_cards(project):
+        """获取所有卡片"""
+        try:
+            wm = WorldManager(PROJECTS_DIR / project)
+            cards = wm.get_cards()
+            return jsonify({"cards": [c.to_dict() for c in cards]})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+    @app.route('/api/world/<project>/cards', methods=['POST'])
+    def create_world_card(project):
+        """创建卡片"""
+        data = request.json
+        # 移除 ID，让其自动生成
+        if 'id' in data:
+            del data['id']
+            
+        try:
+            wm = WorldManager(PROJECTS_DIR / project)
+            from novel_agent.utils.worldbook import WorldCard, CardType
+            
+            # 转换card_type字符串为枚举
+            if 'card_type' in data:
+                # 查找枚举值 (case insensitive)
+                ctype_str = data['card_type'].lower()
+                found = False
+                for t in CardType:
+                    if t.value == ctype_str:
+                        data['card_type'] = t
+                        found = True
+                        break
+                if not found:
+                    data['card_type'] = CardType.CONCEPT # default
+            
+            # 构造对象
+            # 简单处理：利用create_character等helper或直接构造WorldCard
+            import uuid
+            # hacky: manually contruct if generic
+            card = WorldCard(
+                id=str(uuid.uuid4())[:8],
+                **data
+            )
+            
+            wm.add_card(card, index_to_rag=False) # 暂不索引RAG以免太慢
+            return jsonify({"success": True, "card": card.to_dict()})
+            
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/world/<project>/cards/<card_id>', methods=['DELETE'])
+    def delete_world_card(project, card_id):
+        """删除卡片"""
+        try:
+            wm = WorldManager(PROJECTS_DIR / project)
+            wm.delete_card(card_id)
+            return jsonify({"success": True})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+    # ============ API: 版本控制 ============
+
+    @app.route('/api/versions/<project>/files', methods=['GET'])
+    def get_versioned_files(project):
+        """获取有版本记录的文件列表"""
+        try:
+            vm = VersionManager(PROJECTS_DIR / project)
+            files = vm.get_all_files()
+            return jsonify({"files": files})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/versions/<project>/list', methods=['POST'])
+    def get_file_versions(project): # Changed to POST to support path in body safely
+        """获取某文件的版本列表"""
+        data = request.json
+        filepath = data.get('path')
+        
+        try:
+            vm = VersionManager(PROJECTS_DIR / project)
+            versions = vm.get_versions(filepath)
+            return jsonify({"versions": [v.to_dict() for v in versions]})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/versions/<project>/restore', methods=['POST'])
+    def restore_version(project):
+        """恢复版本"""
+        data = request.json
+        filepath = data.get('path')
+        version_id = data.get('version_id')
+        
+        try:
+            vm = VersionManager(PROJECTS_DIR / project)
+            success = vm.restore_version(filepath, version_id)
+            if success:
+                return jsonify({"success": True})
+            else:
+                return jsonify({"error": "恢复失败"}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
             
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True, use_reloader=False)
 

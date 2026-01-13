@@ -70,58 +70,30 @@ nano .env             # 编辑配置
 
 ### 🎭 世界书管理
 
-完整的角色和设定卡片系统：
-
-```python
-# 创建角色卡片
-from novel_agent.utils import WorldManager
-
-world = WorldManager("projects/my_novel")
-world.create_character(
-    name="李青阳",
-    description="青云宗天才弟子，性格沉稳...",
-    gender="男",
-    age="18",
-    abilities=["剑法", "火系法术"]
-)
-```
+**Web 界面操作**：
+- 在 `🌍 世界书` 标签页中可视化的管理角色、地点和设定。
+- 支持创建、编辑、删除卡片。
+- 卡片内容会自动进入 RAG 索引，被 AI 在写作时引用。
 
 ### 📤 多格式导出
 
-```python
-from novel_agent.utils import NovelExporter
-
-exporter = NovelExporter("projects/my_novel")
-exporter.export_txt()   # 纯文本
-exporter.export_docx()  # Word文档
-exporter.export_epub()  # 电子书
-```
+**Web 界面操作**：
+- 在 `📤 导出` 标签页一键下载。
+- 支持 **TXT** (纯文本)、**Word** (DOCX) 和 **EPUB** (电子书) 格式。
 
 ### 📊 批量生成
 
-一键生成多章内容，支持断点续传：
-
-```python
-from novel_agent.utils import BatchGenerator
-
-batch = BatchGenerator(llm, prompt_manager, context_manager, project_path)
-job = batch.create_job(start_chapter=1, end_chapter=10)
-
-for progress in batch.run_job(job):
-    print(f"进度: {progress['job_progress']:.1f}%")
-```
+**Web 界面操作**：
+- 在 `⚡ 批量生成` 标签页配置任务。
+- 支持设定起始/结束章节和标题。
+- 实时查看生成进度和日志，支持后台运行。
 
 ### 🔄 版本管理
 
-内容自动保存历史版本，支持对比和回滚：
-
-```python
-from novel_agent.utils import VersionManager
-
-vm = VersionManager("projects/my_novel")
-vm.save_version("content/chapter_001.md", content, "修改结尾")
-vm.restore_version("content/chapter_001.md", "20260113120000-abc1")
-```
+**Web 界面操作**：
+- 在 `🕰️ 版本历史` 标签页查看文件的修改记录。
+- 自动保存每次生成和编辑的内容。
+- 支持一键回滚到任意历史版本，并在回滚前自动备份当前内容。
 
 ---
 
