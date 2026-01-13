@@ -3,9 +3,6 @@ chcp 65001 >nul
 setlocal EnableDelayedExpansion
 title 番茄小说Agent - 一键安装
 
-:: 颜色设置
-color 0F
-
 cls
 echo.
 echo ╔══════════════════════════════════════════════════════════════╗
@@ -15,59 +12,85 @@ echo ╚════════════════════════
 echo.
 
 :: ============ 步骤 1: 检查 Python ============
-call :step "检查 Python 环境" 1 5
+echo ────────────────────────────────────────────────────────────────
+echo  [1/5] 检查 Python 环境
+echo ────────────────────────────────────────────────────────────────
 
 python --version >nul 2>&1
 if errorlevel 1 (
-    call :error "未检测到 Python！请先安装 Python 3.9+"
+    echo    ❌ 未检测到 Python！请先安装 Python 3.9+
     echo    下载地址: https://www.python.org/downloads/
     pause
     exit /b 1
 )
 
 for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
-call :success "Python %PYTHON_VERSION%"
+echo    ✅ Python %PYTHON_VERSION%
 
 :: ============ 步骤 2: 创建虚拟环境 ============
-call :step "创建虚拟环境" 2 5
+echo.
+echo ────────────────────────────────────────────────────────────────
+echo  [2/5] 创建虚拟环境
+echo ────────────────────────────────────────────────────────────────
 
 if not exist ".venv" (
-    call :progress_start "创建中"
-    python -m venv .venv 2>nul
-    call :progress_end
-    call :success "虚拟环境创建完成"
+    echo    ⏳ 创建虚拟环境中...
+    python -m venv .venv
+    echo    ✅ 虚拟环境创建完成
 ) else (
-    call :success "虚拟环境已存在"
+    echo    ✅ 虚拟环境已存在
 )
 
 :: ============ 步骤 3: 激活虚拟环境 ============
-call :step "激活虚拟环境" 3 5
+echo.
+echo ────────────────────────────────────────────────────────────────
+echo  [3/5] 激活虚拟环境
+echo ────────────────────────────────────────────────────────────────
 call .venv\Scripts\activate.bat
-call :success "已激活"
+echo    ✅ 已激活
 
 :: ============ 步骤 4: 升级 pip ============
-call :step "升级 pip" 4 5
-call :progress_start "升级中"
-python -m pip install --upgrade pip -q 2>nul
-call :progress_end
-call :success "pip 已是最新"
+echo.
+echo ────────────────────────────────────────────────────────────────
+echo  [4/5] 升级 pip
+echo ────────────────────────────────────────────────────────────────
+echo    ⏳ 升级中...
+python -m pip install --upgrade pip -q
+echo    ✅ pip 已是最新
 
 :: ============ 步骤 5: 安装依赖 ============
-call :step "安装项目依赖" 5 5
 echo.
-echo    正在安装依赖包，请稍候...
+echo ────────────────────────────────────────────────────────────────
+echo  [5/5] 安装项目依赖
+echo ────────────────────────────────────────────────────────────────
 echo.
-
-:: 显示安装进度
-call :install_with_progress
-
+echo    ⏳ 正在安装依赖包，这可能需要几分钟...
+echo.
+echo    [▓░░░░░░░░░] 10%% - google-generativeai
+pip install google-generativeai -q
+echo    [▓▓░░░░░░░░] 20%% - chromadb
+pip install chromadb -q
+echo    [▓▓▓░░░░░░░] 30%% - flask
+pip install flask flask-cors -q
+echo    [▓▓▓▓░░░░░░] 40%% - jinja2
+pip install jinja2 -q
+echo    [▓▓▓▓▓░░░░░] 50%% - rich
+pip install rich -q
+echo    [▓▓▓▓▓▓░░░░] 60%% - pyyaml
+pip install pyyaml python-dotenv -q
+echo    [▓▓▓▓▓▓▓░░░] 70%% - 安装项目包
+pip install -e . -q
 if errorlevel 1 (
-    call :error "安装依赖失败！"
+    echo.
+    echo    ❌ 安装失败！正在显示详细错误...
+    echo.
+    pip install -e .
     pause
     exit /b 1
 )
-
-call :success "所有依赖安装完成"
+echo    [▓▓▓▓▓▓▓▓▓▓] 100%% - 全部完成!
+echo.
+echo    ✅ 所有依赖安装完成
 
 :: ============ 完成 ============
 echo.
@@ -102,44 +125,3 @@ echo.
 echo 🎉 现在可以双击 start.bat 启动程序了！
 echo.
 pause
-exit /b 0
-
-:: ============ 函数定义 ============
-
-:step
-echo.
-echo ────────────────────────────────────────────────────────────────
-echo  [%~2/%~3] %~1
-echo ────────────────────────────────────────────────────────────────
-goto :eof
-
-:success
-echo    ✅ %~1
-goto :eof
-
-:error
-echo    ❌ %~1
-goto :eof
-
-:progress_start
-set "progress_msg=%~1"
-<nul set /p "=   ⏳ %progress_msg% "
-goto :eof
-
-:progress_end
-echo ✓
-goto :eof
-
-:install_with_progress
-:: 第一阶段：安装基础依赖
-<nul set /p "=   [░░░░░░░░░░░░░░░░░░░░] 0%% - 准备中..."
-timeout /t 1 >nul
-<nul set /p "="
-
-:: 安装主包
-pip install -e . -q 2>nul
-if errorlevel 1 exit /b 1
-
-<nul set /p "=   [████████████████████] 100%% - 完成!   "
-echo.
-goto :eof
