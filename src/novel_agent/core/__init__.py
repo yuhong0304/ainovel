@@ -4,10 +4,13 @@ Core module - 核心架构组件
 """
 
 from .config import ConfigLoader, config, get_config
-from .context import NovelContext
+from .context import ContextManager
 from .gemini_client import GeminiClient
 from .prompt import PromptManager
 from .rag import RAGManager
+
+# 别名，保持向后兼容
+NovelContext = ContextManager
 
 # 延迟导入多模型客户端以避免可选依赖问题
 def __getattr__(name):
@@ -26,7 +29,8 @@ __all__ = [
     "ConfigLoader",
     "config",
     "get_config",
-    "NovelContext", 
+    "ContextManager",
+    "NovelContext",  # 别名
     "GeminiClient",
     "PromptManager",
     "RAGManager",
