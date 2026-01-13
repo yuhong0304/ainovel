@@ -66,12 +66,20 @@ class InvalidResponseError(GeminiError):
 class TokenCostTracker:
     """Token 成本追踪器"""
     
-    # 定价 (USD per million tokens)
+    # 定价 (USD per million tokens) - 2026年1月
     PRICING = {
-        "gemini-2.0-flash-exp": {"input": 0.075, "output": 0.30},
-        "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
+        # Gemini 3.0 系列
+        "gemini-3.0-pro": {"input": 2.50, "output": 10.00},
+        "gemini-3.0-flash": {"input": 0.15, "output": 0.60},
+        # Gemini 2.5 系列
+        "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
+        "gemini-2.5-flash": {"input": 0.075, "output": 0.30},
+        "gemini-2.5-flash-lite": {"input": 0.04, "output": 0.15},
+        # Gemini 2.0 系列
+        "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
+        # Legacy
         "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
-        "gemini-2.5-pro-preview-05-06": {"input": 1.25, "output": 10.00},
+        "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
     }
     
     def __init__(self):
@@ -117,25 +125,24 @@ class TokenCostTracker:
         }
 
 
-# ============ 可用模型列表 ============
+# ============ 可用模型列表 (2026年1月更新) ============
 
 AVAILABLE_MODELS = [
-    # Gemini 3.0 系列 (2026最新预览版)
-    {"name": "gemini-3-pro-preview", "desc": "Gemini 3.0 Pro 预览版 - 最强大最智能", "tier": "pro"},
-    {"name": "gemini-3-flash-preview", "desc": "Gemini 3.0 Flash 预览版 - 速度与智能平衡", "tier": "flash"},
+    # Gemini 3.0 系列 (2025年11-12月发布，当前最新)
+    {"name": "gemini-3.0-pro", "desc": "Gemini 3.0 Pro - 最强大，复杂推理与Agent任务", "tier": "flagship"},
+    {"name": "gemini-3.0-flash", "desc": "Gemini 3.0 Flash - Pro级推理，极速响应", "tier": "pro"},
     
-    # Gemini 2.5 系列 (稳定版推荐)
-    {"name": "gemini-2.5-pro", "desc": "Gemini 2.5 Pro - 稳定强大，复杂任务首选", "tier": "pro"},
-    {"name": "gemini-2.5-flash", "desc": "Gemini 2.5 Flash - 快速高效", "tier": "flash"},
-    {"name": "gemini-2.5-flash-lite", "desc": "Gemini 2.5 Flash Lite - 超快速轻量", "tier": "flash"},
+    # Gemini 2.5 系列 (2025年6月GA，稳定推荐)
+    {"name": "gemini-2.5-pro", "desc": "Gemini 2.5 Pro - 稳定强大，1M上下文", "tier": "pro"},
+    {"name": "gemini-2.5-flash", "desc": "Gemini 2.5 Flash - 快速高效，日常首选", "tier": "flash"},
+    {"name": "gemini-2.5-flash-lite", "desc": "Gemini 2.5 Flash Lite - 超轻量，成本最优", "tier": "lite"},
     
     # Gemini 2.0 系列
-    {"name": "gemini-2.0-flash", "desc": "Gemini 2.0 Flash - 稳定可靠", "tier": "flash"},
-    {"name": "gemini-2.0-flash-lite", "desc": "Gemini 2.0 Flash Lite - 轻量版", "tier": "flash"},
+    {"name": "gemini-2.0-flash", "desc": "Gemini 2.0 Flash - 经典稳定", "tier": "flash"},
     
-    # 经典版本
-    {"name": "gemini-1.5-pro", "desc": "Gemini 1.5 Pro - 经典强力版", "tier": "pro"},
-    {"name": "gemini-1.5-flash", "desc": "Gemini 1.5 Flash - 经典平衡版", "tier": "flash"},
+    # 经典版本 (Legacy)
+    {"name": "gemini-1.5-pro", "desc": "Gemini 1.5 Pro - 经典版", "tier": "legacy"},
+    {"name": "gemini-1.5-flash", "desc": "Gemini 1.5 Flash - 经典版", "tier": "legacy"},
 ]
 
 
@@ -166,8 +173,8 @@ class GeminiClient(BaseLLMClient):
     - gemini-1.5-flash (平衡选择)
     """
     
-    # 默认模型
-    DEFAULT_MODEL = "gemini-2.0-flash-exp"
+    # 默认模型 (2026年1月推荐)
+    DEFAULT_MODEL = "gemini-2.5-flash"
     
     # 重试配置
     MAX_RETRIES = 3

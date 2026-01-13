@@ -31,11 +31,16 @@ class OpenAIClient(BaseLLMClient):
     - gpt-3.5-turbo
     """
     
+    # 2026年1月更新
     AVAILABLE_MODELS = [
-        {"name": "gpt-4o", "desc": "GPT-4o - 最新多模态模型", "tier": "flagship"},
-        {"name": "gpt-4-turbo", "desc": "GPT-4 Turbo - 高性能版本", "tier": "pro"},
-        {"name": "gpt-4", "desc": "GPT-4 - 经典强力版", "tier": "pro"},
-        {"name": "gpt-3.5-turbo", "desc": "GPT-3.5 Turbo - 快速经济", "tier": "flash"},
+        # GPT-5 系列 (最新)
+        {"name": "gpt-5", "desc": "GPT-5 - 最新旗舰模型", "tier": "flagship"},
+        {"name": "gpt-5-mini", "desc": "GPT-5 Mini - 轻量版", "tier": "pro"},
+        # GPT-4o 系列
+        {"name": "gpt-4o", "desc": "GPT-4o - 多模态旗舰", "tier": "flagship"},
+        {"name": "gpt-4o-mini", "desc": "GPT-4o Mini - 快速经济", "tier": "flash"},
+        # 经典版
+        {"name": "gpt-4-turbo", "desc": "GPT-4 Turbo - 高性能", "tier": "pro"},
     ]
     
     def __init__(
@@ -205,16 +210,23 @@ class ClaudeClient(BaseLLMClient):
     - claude-3-haiku (快速)
     """
     
+    # 2026年1月更新
     AVAILABLE_MODELS = [
-        {"name": "claude-3-opus-20240229", "desc": "Claude 3 Opus - 最强大", "tier": "flagship"},
-        {"name": "claude-3-sonnet-20240229", "desc": "Claude 3 Sonnet - 平衡型", "tier": "pro"},
-        {"name": "claude-3-haiku-20240307", "desc": "Claude 3 Haiku - 快速经济", "tier": "flash"},
+        # Claude 4.x 系列 (2025年11月发布)
+        {"name": "claude-opus-4.5", "desc": "Claude Opus 4.5 - 最强大，编码与Agent首选", "tier": "flagship"},
+        {"name": "claude-sonnet-4.5", "desc": "Claude Sonnet 4.5 - 平衡型，日常推荐", "tier": "pro"},
+        {"name": "claude-haiku-4.5", "desc": "Claude Haiku 4.5 - 快速经济", "tier": "flash"},
+        # Claude 4.0 系列
+        {"name": "claude-opus-4", "desc": "Claude Opus 4 - 强大稳定", "tier": "pro"},
+        {"name": "claude-sonnet-4", "desc": "Claude Sonnet 4 - 通用型", "tier": "pro"},
+        # Claude 3.5 系列 (Legacy)
+        {"name": "claude-3-5-sonnet-20241022", "desc": "Claude 3.5 Sonnet - 经典版", "tier": "legacy"},
     ]
     
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = "claude-3-sonnet-20240229"
+        model_name: str = "claude-sonnet-4.5"
     ):
         """
         初始化 Claude 客户端
@@ -377,7 +389,7 @@ class LLMClientFactory:
             return OpenAIClient(model_name=model_name or "gpt-4o", **kwargs)
         
         elif provider == "claude":
-            return ClaudeClient(model_name=model_name or "claude-3-sonnet-20240229", **kwargs)
+            return ClaudeClient(model_name=model_name or "claude-sonnet-4.5", **kwargs)
         
         else:
             raise ValueError(f"不支持的提供商: {provider}")
@@ -407,7 +419,7 @@ class LLMClientFactory:
                 "id": "gemini",
                 "name": "Google Gemini",
                 "env_key": "GEMINI_API_KEY",
-                "default_model": "gemini-2.0-flash-exp"
+                "default_model": "gemini-2.5-flash"
             },
             {
                 "id": "openai",
@@ -419,6 +431,6 @@ class LLMClientFactory:
                 "id": "claude",
                 "name": "Anthropic Claude",
                 "env_key": "ANTHROPIC_API_KEY",
-                "default_model": "claude-3-sonnet-20240229"
+                "default_model": "claude-sonnet-4.5"
             }
         ]
