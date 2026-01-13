@@ -56,3 +56,4 @@ projects/*
 !projects/.gitkeep
 
 # Legacy/Unused
+_deprecated_backup/

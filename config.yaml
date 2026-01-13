@@ -26,10 +26,10 @@ novel:
 
 # 文件路径
 paths:
-  prompts_dir: "prompts"
+  prompts_dir: "src/novel_agent/prompts"
   projects_dir: "projects"
-  stages_dir: "prompts/stages"
-  learned_dir: "prompts/learned"
+  stages_dir: "src/novel_agent/prompts/stages"
+  learned_dir: "src/novel_agent/prompts/learned"
 
 # 润色设置
 polish:
