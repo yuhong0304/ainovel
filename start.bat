@@ -1,44 +1,46 @@
 @echo off
-chcp 65001 >nul
-title 番茄小说Agent - 启动器
+setlocal EnableDelayedExpansion
+title Novel Agent - Launcher
 
+cls
 echo.
-echo ╔══════════════════════════════════════════════════════════════╗
-echo ║              📚 番茄小说Agent - 启动器                       ║
-echo ║              Novel Agent - Launcher                          ║
-echo ╚══════════════════════════════════════════════════════════════╝
+echo ================================================================
+echo              Novel Agent - Launcher
+echo              (Fanqie Novel AI Assistant)
+echo ================================================================
 echo.
 
-:: 检查虚拟环境
+:: Check venv
 if not exist ".venv\Scripts\activate.bat" (
-    echo ❌ 未检测到虚拟环境！请先运行 install.bat 进行安装
+    echo [X] Virtual environment not found!
+    echo     Please run install.bat first
     echo.
     pause
     exit /b 1
 )
 
-:: 检查 .env 文件
+:: Check .env
 if not exist ".env" (
-    echo ❌ 未检测到 .env 配置文件！
-    echo    请复制 .env.example 为 .env 并填入你的 API Key
+    echo [X] .env config file not found!
+    echo     Please copy .env.example to .env and add your API Key
     echo.
     pause
     exit /b 1
 )
 
-:: 激活虚拟环境
+:: Activate venv
 call .venv\Scripts\activate.bat
 
 :menu
-echo 请选择启动模式:
+echo Select mode:
 echo.
-echo   [1] 🌐 Web 界面模式 (推荐)
-echo   [2] 💻 命令行模式 (CLI)
-echo   [3] 🔧 开发模式 (热重载)
-echo   [0] 退出
+echo   [1] Web UI (recommended)
+echo   [2] Command Line (CLI)
+echo   [3] Development mode
+echo   [0] Exit
 echo.
 
-set /p choice=请输入选项 (1/2/3/0): 
+set /p choice=Enter option (1/2/3/0): 
 
 if "%choice%"=="1" goto web
 if "%choice%"=="2" goto cli
@@ -48,39 +50,39 @@ goto invalid
 
 :web
 echo.
-echo 🚀 启动 Web 界面...
-echo    访问地址: http://localhost:5000
-echo    按 Ctrl+C 停止服务
+echo Starting Web UI...
+echo   URL: http://localhost:5000
+echo   Press Ctrl+C to stop
 echo.
 python -m novel_agent.web.app
 goto end
 
 :cli
 echo.
-echo 🚀 启动命令行模式...
+echo Starting CLI mode...
 echo.
 python -m novel_agent.main
 goto end
 
 :dev
 echo.
-echo 🚀 启动开发模式 (热重载)...
-echo    访问地址: http://localhost:5000
+echo Starting development mode...
+echo   URL: http://localhost:5000
 echo.
 set FLASK_DEBUG=1
 python -m novel_agent.web.app
 goto end
 
 :invalid
-echo ❌ 无效选项，请重新选择
+echo [X] Invalid option
 echo.
 goto menu
 
 :exit
-echo 再见! 👋
+echo Goodbye!
 exit /b 0
 
 :end
 echo.
-echo 程序已退出
+echo Program exited
 pause
