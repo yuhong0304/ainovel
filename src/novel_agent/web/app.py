@@ -11,6 +11,11 @@ import threading
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Generator
+import warnings
+
+# 忽略 google.generativeai 的废弃警告
+warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+warnings.filterwarnings("ignore", category=UserWarning, module="google.generativeai")
 
 from flask import Flask, render_template, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
@@ -1500,6 +1505,12 @@ def add_timeline_event(project):
 
 
 # ============ 启动 ============
+
+
+def create_app():
+    """应用工厂函数"""
+    return app
+
 
 def run_server():
     """启动Web服务器"""
