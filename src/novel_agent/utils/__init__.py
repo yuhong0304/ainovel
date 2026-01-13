@@ -4,12 +4,28 @@ Utils module - 工具函数
 
 from .common import *
 
-# 导出新模块
-from .exporter import NovelExporter
-from .batch import BatchGenerator, BatchJob, BatchTask, BatchStatus
-from .worldbook import WorldManager, WorldCard, CharacterCard, CardType
-from .versioning import VersionManager, Version
-from .stats import StatsCollector, GlobalStatsTracker, ProjectStats
+# 延迟导入新模块以避免依赖问题
+def __getattr__(name):
+    """延迟加载模块"""
+    if name == "NovelExporter":
+        from .exporter import NovelExporter
+        return NovelExporter
+    elif name in ("BatchGenerator", "BatchJob", "BatchTask", "BatchStatus"):
+        from .batch import BatchGenerator, BatchJob, BatchTask, BatchStatus
+        return {"BatchGenerator": BatchGenerator, "BatchJob": BatchJob, 
+                "BatchTask": BatchTask, "BatchStatus": BatchStatus}[name]
+    elif name in ("WorldManager", "WorldCard", "CharacterCard", "CardType"):
+        from .worldbook import WorldManager, WorldCard, CharacterCard, CardType
+        return {"WorldManager": WorldManager, "WorldCard": WorldCard,
+                "CharacterCard": CharacterCard, "CardType": CardType}[name]
+    elif name in ("VersionManager", "Version"):
+        from .versioning import VersionManager, Version
+        return {"VersionManager": VersionManager, "Version": Version}[name]
+    elif name in ("StatsCollector", "GlobalStatsTracker", "ProjectStats"):
+        from .stats import StatsCollector, GlobalStatsTracker, ProjectStats
+        return {"StatsCollector": StatsCollector, "GlobalStatsTracker": GlobalStatsTracker,
+                "ProjectStats": ProjectStats}[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     # 导出器

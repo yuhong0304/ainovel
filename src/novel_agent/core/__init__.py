@@ -8,7 +8,19 @@ from .context import NovelContext
 from .gemini_client import GeminiClient
 from .prompt import PromptManager
 from .rag import RAGManager
-from .multi_llm import LLMClientFactory, OpenAIClient, ClaudeClient
+
+# 延迟导入多模型客户端以避免可选依赖问题
+def __getattr__(name):
+    if name == "LLMClientFactory":
+        from .multi_llm import LLMClientFactory
+        return LLMClientFactory
+    elif name == "OpenAIClient":
+        from .multi_llm import OpenAIClient
+        return OpenAIClient
+    elif name == "ClaudeClient":
+        from .multi_llm import ClaudeClient
+        return ClaudeClient
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "ConfigLoader",
@@ -22,5 +34,3 @@ __all__ = [
     "OpenAIClient",
     "ClaudeClient",
 ]
-
-

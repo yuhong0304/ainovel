@@ -7,14 +7,12 @@
   <a href="https://github.com/yuhong0304/ainovel/actions/workflows/ci.yml">
     <img src="https://github.com/yuhong0304/ainovel/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
-  <a href="https://pypi.org/project/novel-agent/">
-    <img src="https://img.shields.io/pypi/v/novel-agent.svg" alt="PyPI Version">
-  </a>
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python Version">
   <img src="https://img.shields.io/badge/LLM-Gemini%202.0-orange.svg" alt="Gemini">
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
   </a>
+  <img src="https://img.shields.io/badge/version-1.1.0-brightgreen.svg" alt="Version">
 </p>
 
 ---
@@ -29,6 +27,9 @@
 | 🖥️ **CLI 模式** | 命令行交互，适合高效工作流 |
 | 📝 **元提示生成** | 根据灵感自动生成定制化系统提示词 |
 | ✨ **智能润色** | AI 辅助润色，从人工修改中学习你的写作风格 |
+| 📤 **多格式导出** | 支持 TXT/DOCX/EPUB 格式导出 |
+| 🎭 **世界书管理** | 角色卡片、地点设定、势力关系一键管理 |
+| 🤖 **多模型支持** | Gemini / OpenAI GPT-4 / Claude 自由切换 |
 
 ## 🛠️ 快速开始
 
@@ -52,8 +53,11 @@ source .venv/bin/activate  # Linux/Mac
 # 安装
 pip install -e .
 
-# 安装开发依赖 (可选)
-pip install -e ".[dev]"
+# 安装可选功能
+pip install -e ".[export]"   # 导出功能 (DOCX/EPUB)
+pip install -e ".[openai]"   # OpenAI GPT-4 支持
+pip install -e ".[claude]"   # Anthropic Claude 支持
+pip install -e ".[all]"      # 所有额外功能
 ```
 
 ### 配置
@@ -85,7 +89,7 @@ ainovel/
 │   ├── core/               # 🧠 核心模块 (配置/上下文/LLM/RAG)
 │   ├── pipeline/           # ⛓️ 生成流水线
 │   ├── prompts/            # 📝 提示词模板
-│   ├── utils/              # 🛠️ 工具函数
+│   ├── utils/              # 🛠️ 工具函数 (导出/批量/统计)
 │   ├── web/                # 🌐 Web 界面
 │   └── main.py             # 🚀 CLI 入口
 ├── tests/                  # 🧪 测试
@@ -118,7 +122,10 @@ pre-commit install
 - [x] 基础生成流水线
 - [x] RAG 记忆系统
 - [x] Web UI
-- [ ] 多模型支持 (OpenAI, Claude)
+- [x] 多格式导出 (TXT/DOCX/EPUB)
+- [x] 多模型支持 (OpenAI, Claude)
+- [x] 世界书/角色卡片管理
+- [x] 版本历史管理
 - [ ] 插件系统
 - [ ] 在线协作
 
