@@ -29,6 +29,7 @@ if not exist ".env" (
 :: 激活虚拟环境
 call .venv\Scripts\activate.bat
 
+:menu
 echo 请选择启动模式:
 echo.
 echo   [1] 🌐 Web 界面模式 (推荐)
@@ -51,14 +52,14 @@ echo 🚀 启动 Web 界面...
 echo    访问地址: http://localhost:5000
 echo    按 Ctrl+C 停止服务
 echo.
-novel-web
+python -m novel_agent.web.app
 goto end
 
 :cli
 echo.
 echo 🚀 启动命令行模式...
 echo.
-novel-agent
+python -m novel_agent.main
 goto end
 
 :dev
@@ -66,13 +67,14 @@ echo.
 echo 🚀 启动开发模式 (热重载)...
 echo    访问地址: http://localhost:5000
 echo.
+set FLASK_DEBUG=1
 python -m novel_agent.web.app
 goto end
 
 :invalid
 echo ❌ 无效选项，请重新选择
-pause
-goto start
+echo.
+goto menu
 
 :exit
 echo 再见! 👋
