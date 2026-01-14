@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/version-1.2.0-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.2.1-brightgreen.svg" alt="Version">
   <img src="https://img.shields.io/badge/LLM-Gemini%203.0%20|%20GPT--5%20|%20Claude%204-orange.svg" alt="LLM">
 </p>
 
@@ -34,7 +34,7 @@
 ### Windows 用户
 
 ```
-1. 双击 install.bat   ← 自动安装依赖
+1. 双击 install.bat   ← 自动安装依赖 (支持 v1.1.0+ 平滑升级迁移)
 2. 编辑 .env 文件，填入 API Key
 3. 双击 start.bat     ← 启动程序
 ```
@@ -43,7 +43,7 @@
 
 ```bash
 chmod +x install.sh start.sh
-./install.sh          # 安装依赖
+./install.sh          # 安装依赖 (支持自动迁移)
 nano .env             # 编辑配置
 ./start.sh            # 启动程序
 ```
@@ -176,6 +176,17 @@ mypy src/novel_agent
 ---
 
 ## 📋 版本历史
+
+### v1.2.1 (2026-01-14) - Fixes & Migration 🛠️
+- **安装器升级**:
+    - `install.bat` / `install.sh` 现在支持**无损迁移** (Update)。
+    - 自动备份 `.env` 配置。
+    - 自动清理旧的构建产物，防止版本冲突。
+    - 强制更新所有依赖（包含 Export 和 LLM 扩展包）。
+- **API 修复**:
+    - 修复了 Worldbook、Batch Generate 和 Export 的前后端接口不一致问题。
+- **配置更新**:
+    - `pyproject.toml` 统一版本号为 1.2.1。
 
 ### v1.2.0 (2026-01-14) - Revolutionary Update 🚀
 - **智能进化**:

@@ -37,7 +37,7 @@ echo.
 echo      NOVEL AGENT  -  AI POWERED WRITING ASSISTANT
 echo.
 echo               +------------------------+
-echo               ^|    Launcher v1.2.0     ^|
+echo               ^|    Launcher v1.2.1     ^|
 echo               +------------------------+
 echo.
 echo  ======================================================================

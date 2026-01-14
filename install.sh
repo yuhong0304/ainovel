@@ -16,7 +16,7 @@ echo ""
 echo -e "${CYAN}      NOVEL AGENT  -  AI POWERED WRITING ASSISTANT${NC}"
 echo ""
 echo -e "${CYAN}               +------------------------+${NC}"
-echo -e "${CYAN}               |   Installer v1.2.0     |${NC}"
+echo -e "${CYAN}               | Installer v1.2.1     |${NC}"
 echo -e "${CYAN}               +------------------------+${NC}"
 echo ""
 echo -e "${CYAN}======================================================================${NC}"
@@ -61,32 +61,33 @@ pip install --upgrade pip -q
 echo -e "      Pip upgraded to latest version ... ${GREEN}[OK]${NC}"
 echo ""
 
-# Install dependencies
-echo -e "${BLUE}[5/5] Installing Libraries...${NC}"
+# Install dependencies (Migrate logic)
+echo -e "${BLUE}[5/5] Installing/Updating Libraries...${NC}"
 echo ""
 echo "      Please wait, downloading packages..."
 echo ""
 
 echo -e "      [..        ] Google Generative AI SDK"
-pip install google-generativeai -q
+pip install google-generativeai --upgrade -q
 
 echo -e "      [....      ] ChromaDB Vector Database"
-pip install chromadb -q
+pip install chromadb --upgrade -q
 
 echo -e "      [......    ] Web Framework (Flask)"
-pip install flask flask-cors -q
+pip install flask flask-cors --upgrade -q
 
 echo -e "      [........  ] Text Processing Tools"
-pip install jinja2 rich pyyaml python-dotenv -q
+pip install jinja2 rich pyyaml python-dotenv --upgrade -q
 
-echo -e "      [..........] Novel Agent Core"
-pip install -e . -q
+echo -e "      [..........] Novel Agent Core (Full Features)"
+# Install with [full] to support Export, OpenAI, etc.
+pip install -e .[full] --upgrade -q
 
 if [ $? -ne 0 ]; then
     echo ""
     echo -e "${RED}[ERROR] Installation failed.${NC}"
     echo "Retrying in verbose mode to show errors:"
-    pip install -e .
+    pip install -e .[full]
     exit 1
 fi
 
