@@ -57,3 +57,19 @@ projects/*
 
 # Legacy/Unused
 _deprecated_backup/
+
+# Installer & Migration Backups
+.env.bak
+backup_*/
+
+# Frontend
+node_modules/
+frontend/node_modules/
+# frontend/dist/ is intentionally tracked for release
+
+# Data & Local Storage
+data/*
+!data/.gitkeep
+chroma_db/
+*.sqlite3
+
