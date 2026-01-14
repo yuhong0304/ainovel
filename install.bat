@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableDelayedExpansion
 title Novel Agent - Installer & Updater
 color 0B
@@ -159,6 +160,12 @@ echo      Migration Notes:
 echo      - Your previous configuration was backed up to .env.bak
 echo      - Your projects data in 'projects/' directory is safe.
 echo      - Old build artifacts were cleaned up.
+echo.
+echo      [中文提示]
+echo      安装/更新已完成！
+echo      - 配置文件已备份 (.env.bak)
+echo      - 项目数据已保留
+echo      请运行 'start.bat' 启动程序。
 echo.
 echo      What to do next:
 echo      1. Run 'start.bat' to launch the application.
