@@ -77,6 +77,45 @@ META_PROMPT_TEMPLATE = '''# 你是一位顶级网文策划专家
 '''
 
 
+# 生成3个变体的Prompt模板
+META_PROMPT_VARIANTS_TEMPLATE = '''# 你是一位顶级网文策划专家
+
+你需要根据用户提供的小说灵感，**发散出 3 个截然不同的故事走向或核心设定方案**。
+
+## 方案要求
+1. **差异化**：三个方案必须有明显的区别（例如：不同的金手指类型、不同的切入点、不同的核心冲突、或不同的题材侧重）。
+2. **吸引力**：每个方案都要有明确的爽点和卖点。
+3. **完整性**：每个方案都要包含以下字段。
+
+## 任务
+
+根据灵感："{user_inspiration}"
+
+生成 3 个方案，输出格式为 JSON 列表：
+```json
+[
+  {{
+    "title": "书名建议",
+    "core_positioning": "一句话核心定位（例如：热血复仇流 / 幕后黑手流）",
+    "highlights": "核心卖点（100字以内）",
+    "introduction": "200字左右的简介，由悬念引入。",
+    "config_yaml": "（此处生成该方案对应的标准YAML配置，参考下方格式）"
+  }},
+  ...
+]
+```
+
+## config_yaml 格式参考 (保持为字符串)
+```yaml
+# 小说定制化配置
+## 1. 核心定位
+书名建议: ...
+题材标签: ...
+... (保持与标准配置一致的YAML结构)
+```
+'''
+
+
 # 系统Prompt生成模板
 SYSTEM_PROMPT_GENERATOR = '''# 根据定制化配置生成系统Prompt
 
@@ -364,3 +403,41 @@ class MetaPromptGenerator:
 '''
         result = self.llm.generate(prompt, config=self.config)
         return result.content
+
+    def analyze_inspiration_variants(self, inspiration: str) -> list:
+        """
+        分析灵感，生成3个变体方案
+        
+        Args:
+            inspiration: 用户输入的小说灵感
+            
+        Returns:
+            list: 包含3个方案的字典列表
+        """
+        prompt = META_PROMPT_VARIANTS_TEMPLATE.format(user_inspiration=inspiration)
+        # 临时提高temperature以增加多样性
+        temp_config = GenerationConfig(
+            temperature=0.9,
+            max_tokens=8192
+        )
+        result = self.llm.generate(prompt, config=temp_config)
+        
+        # 尝试解析JSON
+        import json
+        import re
+        
+        content = result.content
+        # 提取Markdown代码块中的JSON
+        match = re.search(r'```json\s*([\s\S]*?)\s*```', content)
+        if match:
+            json_str = match.group(1)
+        else:
+            json_str = content
+            
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            print(f"JSON解析失败: {content[:100]}...")
+            # Fallback: 尝试修复或返回空
+            return []
+

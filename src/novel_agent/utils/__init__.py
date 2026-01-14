@@ -25,6 +25,15 @@ def __getattr__(name):
         from .stats import StatsCollector, GlobalStatsTracker, ProjectStats
         return {"StatsCollector": StatsCollector, "GlobalStatsTracker": GlobalStatsTracker,
                 "ProjectStats": ProjectStats}[name]
+    elif name == "StructureManager":
+        from .structure import StructureManager
+        return StructureManager
+    elif name == "BatchStructureGenerator":
+        from .batch_structure import BatchStructureGenerator
+        return BatchStructureGenerator
+    elif name == "ContentManager":
+        from .content import ContentManager
+        return ContentManager
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
@@ -51,4 +60,9 @@ __all__ = [
     "StatsCollector",
     "GlobalStatsTracker",
     "ProjectStats",
+    
+    # 结构管理
+    "StructureManager",
+    "BatchStructureGenerator",
+    "ContentManager"
 ]

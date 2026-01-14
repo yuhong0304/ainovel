@@ -1,67 +1,115 @@
 #!/bin/bash
+cd "$(dirname "$0")"
 # 番茄小说Agent - 启动脚本 (Linux/Mac)
 
-echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║              📚 番茄小说Agent - 启动器                       ║"
-echo "║              Novel Agent - Launcher                          ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo ""
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# 检查虚拟环境
+# Check venv
 if [ ! -f ".venv/bin/activate" ]; then
-    echo "❌ 未检测到虚拟环境！请先运行 ./install.sh 进行安装"
+    echo -e "${RED}[ERROR] Virtual environment not found.${NC}"
+    echo "Please run ./install.sh first to set up the environment."
     exit 1
 fi
 
-# 检查 .env 文件
+# Check .env
 if [ ! -f ".env" ]; then
-    echo "❌ 未检测到 .env 配置文件！"
-    echo "   请复制 .env.example 为 .env 并填入你的 API Key"
+    echo -e "${RED}[ERROR] Configuration file (.env) missing.${NC}"
+    echo "Please copy '.env.example' to '.env' and add your API keys."
     exit 1
 fi
 
-# 激活虚拟环境
+# Activate venv
 source .venv/bin/activate
+PYTHON_EXE="$(pwd)/.venv/bin/python3"
+export PYTHONPATH=src:$PYTHONPATH
 
-echo "请选择启动模式:"
-echo ""
-echo "  [1] 🌐 Web 界面模式 (推荐)"
-echo "  [2] 💻 命令行模式 (CLI)"
-echo "  [3] 🔧 开发模式 (热重载)"
-echo "  [0] 退出"
-echo ""
+while true; do
+    clear
+    echo ""
+    echo -e "${CYAN}======================================================================${NC}"
+    echo ""
+    echo -e "${CYAN}      NOVEL AGENT  -  AI POWERED WRITING ASSISTANT${NC}"
+    echo ""
+    echo -e "${CYAN}               +------------------------+${NC}"
+    echo -e "${CYAN}               |    Launcher v1.2.0     |${NC}"
+    echo -e "${CYAN}               +------------------------+${NC}"
+    echo ""
+    echo -e "${CYAN}======================================================================${NC}"
+    echo ""
+    echo "    Select Startup Mode:"
+    echo "    -------------------"
+    echo ""
+    echo -e "    ${GREEN}[1] Web Interface (Recommended)${NC}"
+    echo "        - Starts the local web server at http://localhost:5000"
+    echo "        - Best for most users."
+    echo ""
+    echo -e "    ${YELLOW}[2] Command Line Interface (CLI)${NC}"
+    echo "        - Text-based interactive mode."
+    echo ""
+    echo -e "    ${BLUE}[3] Development Mode${NC}"
+    echo "        - Starts with debug features and hot-reloading."
+    echo ""
+    echo "    [0] Exit"
+    echo ""
+    echo -e "${CYAN}======================================================================${NC}"
+    echo ""
+    
+    read -p "    Enter option (1/2/3/0): " choice
 
-read -p "请输入选项 (1/2/3/0): " choice
-
-case $choice in
-    1)
-        echo ""
-        echo "🚀 启动 Web 界面..."
-        echo "   访问地址: http://localhost:5000"
-        echo "   按 Ctrl+C 停止服务"
-        echo ""
-        novel-web
-        ;;
-    2)
-        echo ""
-        echo "🚀 启动命令行模式..."
-        echo ""
-        novel-agent
-        ;;
-    3)
-        echo ""
-        echo "🚀 启动开发模式 (热重载)..."
-        echo "   访问地址: http://localhost:5000"
-        echo ""
-        python -m novel_agent.web.app
-        ;;
-    0)
-        echo "再见! 👋"
-        exit 0
-        ;;
-    *)
-        echo "❌ 无效选项"
-        exit 1
-        ;;
-esac
+    case $choice in
+        1)
+            clear
+            echo ""
+            echo -e "${GREEN}======================================================================${NC}"
+            echo -e "${GREEN}  Starting Web Interface...${NC}"
+            echo -e "${GREEN}======================================================================${NC}"
+            echo ""
+            echo "  URL: http://localhost:5000"
+            echo ""
+            echo "  (Press Ctrl+C to stop the server)"
+            echo ""
+            "$PYTHON_EXE" -m novel_agent.web.app
+            read -p "Press Enter to return to menu..."
+            ;;
+        2)
+            clear
+            echo ""
+            echo -e "${YELLOW}======================================================================${NC}"
+            echo -e "${YELLOW}  Starting CLI Mode...${NC}"
+            echo -e "${YELLOW}======================================================================${NC}"
+            echo ""
+            "$PYTHON_EXE" -m novel_agent.main
+            read -p "Press Enter to return to menu..."
+            ;;
+        3)
+            clear
+            echo ""
+            echo -e "${BLUE}======================================================================${NC}"
+            echo -e "${BLUE}  Starting Development Mode (Debug ON)...${NC}"
+            echo -e "${BLUE}======================================================================${NC}"
+            echo ""
+            echo "  URL: http://localhost:5000"
+            echo ""
+            # Set FLASK_DEBUG for the session
+            export FLASK_DEBUG=1
+            "$PYTHON_EXE" -m novel_agent.web.app
+            read -p "Press Enter to return to menu..."
+            ;;
+        0)
+            echo ""
+            echo "Goodbye! 👋"
+            exit 0
+            ;;
+        *)
+            echo ""
+            echo -e "${RED}[!] Invalid option selected. Please try again.${NC}"
+            sleep 1
+            ;;
+    esac
+done

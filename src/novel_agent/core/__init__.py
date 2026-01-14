@@ -14,16 +14,14 @@ NovelContext = ContextManager
 
 # 延迟导入多模型客户端以避免可选依赖问题
 def __getattr__(name):
-    if name == "LLMClientFactory":
-        from .multi_llm import LLMClientFactory
-        return LLMClientFactory
-    elif name == "OpenAIClient":
-        from .multi_llm import OpenAIClient
+    if name == "OpenAIClient":
+        from .openai_client import OpenAIClient
         return OpenAIClient
     elif name == "ClaudeClient":
-        from .multi_llm import ClaudeClient
+        from .claude_client import ClaudeClient
         return ClaudeClient
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "ConfigLoader",

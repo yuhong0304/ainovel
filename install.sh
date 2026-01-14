@@ -1,75 +1,118 @@
 #!/bin/bash
 # 番茄小说Agent - 一键安装脚本 (Linux/Mac)
 
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+clear
 echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║         📚 番茄小说Agent - 一键安装程序                      ║"
-echo "║         Novel Agent - One-Click Installer                    ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo -e "${CYAN}======================================================================${NC}"
+echo ""
+echo -e "${CYAN}      NOVEL AGENT  -  AI POWERED WRITING ASSISTANT${NC}"
+echo ""
+echo -e "${CYAN}               +------------------------+${NC}"
+echo -e "${CYAN}               |   Installer v1.2.0     |${NC}"
+echo -e "${CYAN}               +------------------------+${NC}"
+echo ""
+echo -e "${CYAN}======================================================================${NC}"
 echo ""
 
-# 检查 Python
-echo "[1/5] 检查 Python 环境..."
+# Check Python
+echo -e "${BLUE}[1/5] Checking System Requirements...${NC}"
 if ! command -v python3 &> /dev/null; then
-    echo "❌ 未检测到 Python3！请先安装 Python 3.9+"
+    echo -e "${RED}[ERROR] Python 3 is not installed.${NC}"
+    echo "Please install Python 3.9+ and try again."
     exit 1
 fi
 
 PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-echo "✅ 检测到 Python $PYTHON_VERSION"
-
-# 创建虚拟环境
+echo -e "      Found Python $PYTHON_VERSION ... ${GREEN}[OK]${NC}"
 echo ""
-echo "[2/5] 创建虚拟环境..."
+
+# Create venv
+echo -e "${BLUE}[2/5] Setting up Virtual Environment...${NC}"
 if [ ! -d ".venv" ]; then
+    echo "      Creating .venv directory..."
     python3 -m venv .venv
-    echo "✅ 虚拟环境创建成功"
+    echo -e "      Virtual environment created ... ${GREEN}[OK]${NC}"
 else
-    echo "✅ 虚拟环境已存在"
+    echo -e "      Using existing .venv ... ${GREEN}[OK]${NC}"
 fi
-
-# 激活虚拟环境
 echo ""
-echo "[3/5] 激活虚拟环境..."
+
+# Activate venv
+echo -e "${BLUE}[3/5] Activating Environment...${NC}"
 source .venv/bin/activate
-
-# 升级 pip
+if [ $? -ne 0 ]; then
+    echo -e "${RED}[ERROR] Failed to activate virtual environment.${NC}"
+    exit 1
+fi
+echo -e "      Environment activated ... ${GREEN}[OK]${NC}"
 echo ""
-echo "[4/5] 升级 pip..."
+
+# Upgrade pip
+echo -e "${BLUE}[4/5] Establishing Core Tools...${NC}"
 pip install --upgrade pip -q
-
-# 安装依赖
+echo -e "      Pip upgraded to latest version ... ${GREEN}[OK]${NC}"
 echo ""
-echo "[5/5] 安装项目依赖..."
+
+# Install dependencies
+echo -e "${BLUE}[5/5] Installing Libraries...${NC}"
+echo ""
+echo "      Please wait, downloading packages..."
+echo ""
+
+echo -e "      [..        ] Google Generative AI SDK"
+pip install google-generativeai -q
+
+echo -e "      [....      ] ChromaDB Vector Database"
+pip install chromadb -q
+
+echo -e "      [......    ] Web Framework (Flask)"
+pip install flask flask-cors -q
+
+echo -e "      [........  ] Text Processing Tools"
+pip install jinja2 rich pyyaml python-dotenv -q
+
+echo -e "      [..........] Novel Agent Core"
 pip install -e . -q
 
 if [ $? -ne 0 ]; then
-    echo "❌ 安装依赖失败！"
+    echo ""
+    echo -e "${RED}[ERROR] Installation failed.${NC}"
+    echo "Retrying in verbose mode to show errors:"
+    pip install -e .
     exit 1
 fi
 
 echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                     ✅ 安装完成!                             ║"
-echo "╠══════════════════════════════════════════════════════════════╣"
-echo "║                                                              ║"
-echo "║  下一步:                                                     ║"
-echo "║  1. 复制 .env.example 为 .env                                ║"
-echo "║  2. 在 .env 中填入你的 GEMINI_API_KEY                        ║"
-echo "║  3. 运行 ./start.sh 启动程序                                 ║"
-echo "║                                                              ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo -e "      All dependencies installed ... ${GREEN}[OK]${NC}"
 echo ""
 
-# 检查 .env 文件
+# Check .env
 if [ ! -f ".env" ]; then
-    echo "⚠️  检测到 .env 文件不存在，正在从模板创建..."
+    echo -e "${YELLOW}[+] Configuration Setup${NC}"
+    echo "    Creating default .env file..."
     cp .env.example .env
-    echo "✅ 已创建 .env 文件，请编辑填入你的 API Key"
+    echo -e "    ${GREEN}[OK] .env file created${NC}"
     echo ""
-    echo "运行以下命令编辑配置文件:"
-    echo "  nano .env"
+    echo "    Run the following command to edit configuration:"
+    echo -e "    ${YELLOW}nano .env${NC}"
 fi
 
 echo ""
-echo "安装完成! 运行 './start.sh' 启动程序"
+echo -e "${GREEN}======================================================================${NC}"
+echo ""
+echo -e "${GREEN}      INSTALLATION SUCCESSFUL!${NC}"
+echo ""
+echo "      What to do next:"
+echo "      1. Ensure you added your API KEY in the .env file"
+echo "      2. Run './start.sh' to launch the application"
+echo ""
+echo -e "${GREEN}======================================================================${NC}"
+echo ""

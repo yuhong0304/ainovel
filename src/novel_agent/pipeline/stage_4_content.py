@@ -7,6 +7,7 @@ from typing import Optional, Generator
 from ..core.llm_base import BaseLLMClient, GenerationConfig
 from ..core.prompt import PromptManager
 from ..core.context import ContextManager
+from ..core.rag import RAGManager
 from ..utils import count_words
 
 
@@ -35,6 +36,9 @@ DEFAULT_CONTENT_PROMPT = '''# 角色
 ## 人物状态
 {character_status}
 
+## (RAG) 记忆库检索线索
+{rag_context}
+
 # 输出要求
 直接输出正文内容，不需要标题和其他说明。
 开篇直接进入情节，用动作或对话开始。
@@ -43,11 +47,11 @@ DEFAULT_CONTENT_PROMPT = '''# 角色
 
 class ContentGenerator:
     """
-    正文生成器
+    正文生成器 (Intelligent Version)
     
     功能：
-    - 根据细纲生成3000字正文
-    - 支持流式输出
+    - RAG 增强：自动检索世界观和伏笔
+    - 风格自适应：根据章节类型调整参数 (TODO)
     - 自动控制字数
     """
     
@@ -55,20 +59,36 @@ class ContentGenerator:
         self,
         llm_client: BaseLLMClient,
         prompt_manager: Optional[PromptManager] = None,
-        context_manager: Optional[ContextManager] = None
+        context_manager: Optional[ContextManager] = None,
+        rag_manager: Optional[RAGManager] = None
     ):
         self.llm = llm_client
         self.prompt_manager = prompt_manager
         self.context_manager = context_manager
+        self.rag_manager = rag_manager
         
         self.config = GenerationConfig(
-            temperature=0.8,  # 稍高创意度
+            temperature=0.8,
             max_tokens=8192
         )
         
         self.target_words = 3000
-        self.word_tolerance = 200  # 允许误差
+        self.word_tolerance = 200
     
+    def _retrieve_context(self, query: str) -> str:
+        """从RAG检索相关上下文"""
+        if not self.rag_manager or not query:
+            return ""
+        try:
+            # 检索最相关的3条设定/旧文
+            docs = self.rag_manager.query(query, n_results=3)
+            if docs:
+                return "\n".join([f"- {d}" for d in docs])
+            return ""
+        except Exception as e:
+            print(f"RAG Retrieval warning: {e}")
+            return ""
+
     def generate(
         self,
         chapter_outline: str,
@@ -76,47 +96,59 @@ class ContentGenerator:
         character_status: str = "",
         custom_prompt_path: Optional[str] = None
     ) -> str:
-        """
-        生成章节正文
+        """生成章节正文"""
+        # 1. RAG 检索
+        rag_context = self._retrieve_context(f"{chapter_outline}\n{previous_summary}")
         
-        Args:
-            chapter_outline: 章节细纲
-            previous_summary: 前情摘要
-            character_status: 人物当前状态
-            custom_prompt_path: 定制Prompt路径
-        """
-        # 加载Prompt
+        # 2. 加载 Prompt
         if custom_prompt_path and self.prompt_manager:
             try:
+                # 使用 PromptManager 的 render 功能自动注入 rag_context
+                # 如果是直接 load_template 则只能拿生文本
+                # 这里假设 load_template 返回 raw string
                 prompt_template = self.prompt_manager.load_template(custom_prompt_path)
             except FileNotFoundError:
                 prompt_template = DEFAULT_CONTENT_PROMPT
         else:
             prompt_template = DEFAULT_CONTENT_PROMPT
         
-        # 构建完整系统Prompt
+        # 3. 构建 System Prompt
         system_parts = []
         if self.prompt_manager:
             rules = self.prompt_manager.get_system_rules()
             style = self.prompt_manager.get_writing_style()
             learned = self.prompt_manager.get_learned_rules()
             
-            if rules:
-                system_parts.append(rules)
-            if style:
-                system_parts.append(style)
-            if learned:
-                system_parts.append(f"# 已学习的润色规则\n{learned}")
+            if rules: system_parts.append(rules)
+            if style: system_parts.append(style)
+            if learned: system_parts.append(f"# 已学习的润色规则\n{learned}")
         
         system_prompt = "\n\n---\n\n".join(system_parts) if system_parts else None
         
-        # 渲染Prompt
-        prompt = prompt_template.format(
-            chapter_outline=chapter_outline,
-            previous_summary=previous_summary or "无",
-            character_status=character_status or "参见细纲"
-        )
-        
+        # 4. 渲染 Prompt
+        # 检查 prompt_template 是否包含 rag_context 占位符，如果没有但检索到了，强制追加
+        prompt = prompt_template
+        if "{rag_context}" in prompt:
+            prompt = prompt.format(
+                chapter_outline=chapter_outline,
+                previous_summary=previous_summary or "无",
+                character_status=character_status or "参见细纲",
+                rag_context=rag_context or "无相关资料"
+            )
+        else:
+            # Fallback formatting
+            try:
+                prompt = prompt.format(
+                    chapter_outline=chapter_outline,
+                    previous_summary=previous_summary or "无",
+                    character_status=character_status or "参见细纲"
+                )
+                if rag_context:
+                    prompt += f"\n\n# 参考资料 (记忆库)\n{rag_context}"
+            except KeyError:
+                # 模板可能不包含某些 key，做个保险
+                pass
+
         result = self.llm.generate(
             prompt=prompt,
             system_prompt=system_prompt,
@@ -131,26 +163,33 @@ class ContentGenerator:
         previous_summary: str = "",
         character_status: str = ""
     ) -> Generator[str, None, None]:
-        """
-        流式生成正文
+        """流式生成正文"""
+        # 1. RAG 检索
+        rag_context = self._retrieve_context(f"{chapter_outline}\n{previous_summary}")
         
-        边生成边输出，适合CLI展示
-        """
+        # 2. 准备 Prompt
         prompt_template = DEFAULT_CONTENT_PROMPT
         
-        # 系统Prompt
         system_prompt = None
         if self.prompt_manager:
             rules = self.prompt_manager.get_system_rules()
             style = self.prompt_manager.get_writing_style()
-            if rules or style:
-                system_prompt = f"{rules}\n\n{style}".strip()
+            learned = self.prompt_manager.get_learned_rules()
+            parts = [p for p in [rules, style, learned] if p]
+            if parts:
+                system_prompt = "\n\n".join(parts)
         
-        prompt = prompt_template.format(
-            chapter_outline=chapter_outline,
-            previous_summary=previous_summary or "无",
-            character_status=character_status or "参见细纲"
-        )
+        # 3. 渲染
+        try:
+             prompt = prompt_template.format(
+                chapter_outline=chapter_outline,
+                previous_summary=previous_summary or "无",
+                character_status=character_status or "参见细纲",
+                rag_context=rag_context or "暂无检索结果"
+            )
+        except:
+             # Fallback
+             prompt = f"细纲: {chapter_outline}\n摘要: {previous_summary}\n参考: {rag_context}"
         
         for chunk in self.llm.generate_stream(
             prompt=prompt,

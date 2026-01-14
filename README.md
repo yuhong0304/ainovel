@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/version-1.1.0-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.2.0-brightgreen.svg" alt="Version">
   <img src="https://img.shields.io/badge/LLM-Gemini%203.0%20|%20GPT--5%20|%20Claude%204-orange.svg" alt="LLM">
 </p>
 
@@ -177,18 +177,26 @@ mypy src/novel_agent
 
 ## 📋 版本历史
 
+### v1.2.0 (2026-01-14) - Revolutionary Update 🚀
+- **智能进化**:
+    - **RAG 上下文感知**: 自动检索世界书设定，根据剧情注入相关记忆。
+    - **风格分析器**: 实时监控文风（句长、对话比），保持写作一致性。
+    - **闭环学习**: `RuleLearner` 自动从你的人工修改中提取写作规则。
+- **架构重构**:
+    - 后端全面模块化 (Flask Blueprints)，提升稳定性。
+    - 修复了生成流中断和路由冲突的问题。
+- **Prompt 升级**:
+    - 新增场景化模版: `Action` (战斗), `Emotional` (情感), `Suspense` (悬疑)。
+
 ### v1.1.0 (2026-01-13)
 - ✨ 新增导出功能 (TXT/DOCX/EPUB)
 - ✨ 新增批量生成模块
 - ✨ 新增世界书/角色卡片管理
 - ✨ 新增版本历史管理
-- ✨ 新增多模型支持 (OpenAI, Claude)
-- 🔧 更新模型到 2026 最新版本
 
 ### v1.0.0 (2026-01-12)
 - 🚀 首次发布
 - 完整的创作流水线
-- RAG 记忆系统
 - Web UI 和 CLI
 
 ---

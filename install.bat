@@ -1,126 +1,130 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Novel Agent - Installer
+color 0B
 
 cls
 echo.
-echo ================================================================
-echo          Novel Agent - One-Click Installer v1.1
-echo          (Fanqie Novel AI Assistant)
-echo ================================================================
+echo  ======================================================================
+echo.
+echo      NOVEL AGENT  -  AI POWERED WRITING ASSISTANT
+echo.
+echo               +------------------------+
+echo               ^|   Installer v1.2.0     ^|
+echo               +------------------------+
+echo.
+echo  ======================================================================
 echo.
 
 :: ============ Step 1: Check Python ============
-echo ----------------------------------------------------------------
-echo  [1/5] Checking Python...
-echo ----------------------------------------------------------------
+echo  [1/5] Checking System Requirements...
 
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo    [X] Python not found! Please install Python 3.9+
-    echo        Download: https://www.python.org/downloads/
+    color 0C
+    echo.
+    echo  [ERROR] Python is not installed or not in PATH.
+    echo.
+    echo  Please install Python 3.9 or higher from:
+    echo  https://www.python.org/downloads/
+    echo.
     pause
     exit /b 1
 )
 
 for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
-echo    [OK] Python %PYTHON_VERSION%
-
-:: ============ Step 2: Create venv ============
+echo        Found Python %PYTHON_VERSION% ... [OK]
 echo.
-echo ----------------------------------------------------------------
-echo  [2/5] Creating virtual environment...
-echo ----------------------------------------------------------------
+
+:: ============ Step 2: Create Environment ============
+echo  [2/5] Setting up Virtual Environment...
 
 if not exist ".venv" (
-    echo    [...] Creating venv...
+    echo        Creating .venv directory...
     python -m venv .venv
-    echo    [OK] Virtual environment created
+    echo        Virtual environment created ... [OK]
 ) else (
-    echo    [OK] Virtual environment exists
+    echo        Using existing .venv ... [OK]
 )
-
-:: ============ Step 3: Activate venv ============
 echo.
-echo ----------------------------------------------------------------
-echo  [3/5] Activating virtual environment...
-echo ----------------------------------------------------------------
+
+:: ============ Step 3: Activate ============
+echo  [3/5] Activating Environment...
 call .venv\Scripts\activate.bat
-echo    [OK] Activated
-
-:: ============ Step 4: Upgrade pip ============
-echo.
-echo ----------------------------------------------------------------
-echo  [4/5] Upgrading pip...
-echo ----------------------------------------------------------------
-echo    [...] Upgrading...
-python -m pip install --upgrade pip -q
-echo    [OK] pip is up to date
-
-:: ============ Step 5: Install dependencies ============
-echo.
-echo ----------------------------------------------------------------
-echo  [5/5] Installing dependencies...
-echo ----------------------------------------------------------------
-echo.
-echo    This may take a few minutes...
-echo.
-echo    [##--------] 10%% - google-generativeai
-pip install google-generativeai -q
-echo    [####------] 20%% - chromadb
-pip install chromadb -q
-echo    [#####-----] 30%% - flask
-pip install flask flask-cors -q
-echo    [######----] 40%% - jinja2
-pip install jinja2 -q
-echo    [#######---] 50%% - rich
-pip install rich -q
-echo    [########--] 60%% - pyyaml
-pip install pyyaml python-dotenv -q
-echo    [#########-] 70%% - installing project
-pip install -e . -q
 if errorlevel 1 (
+    color 0C
     echo.
-    echo    [X] Installation failed! Showing details...
+    echo  [ERROR] Failed to activate virtual environment.
+    pause
+    exit /b 1
+)
+echo        Environment activated ... [OK]
+echo.
+
+:: ============ Step 4: Upgrade Tools ============
+echo  [4/5] Establishing Core Tools...
+python -m pip install --upgrade pip -q
+echo        Pip upgraded to latest version ... [OK]
+echo.
+
+:: ============ Step 5: Install Dependencies ============
+echo  [5/5] Installing Libraries...
+echo.
+echo        Please wait, downloading packages (this may take a while)...
+echo.
+
+echo        [..        ] Google Generative AI SDK ...
+pip install google-generativeai -q
+
+echo        [....      ] ChromaDB Vector Database ...
+pip install chromadb -q
+
+echo        [......    ] Web Framework (Flask) ...
+pip install flask flask-cors -q
+
+echo        [........  ] Text Processing Tools ...
+pip install jinja2 rich pyyaml python-dotenv -q
+
+echo        [..........] Novel Agent Core ...
+pip install -e . -q
+
+if errorlevel 1 (
+    color 0C
     echo.
+    echo  [ERROR] Installation failed.
+    echo.
+    echo  Retrying in verbose mode to show errors:
+    echo  ----------------------------------------
     pip install -e .
     pause
     exit /b 1
 )
-echo    [##########] 100%% - Done!
 echo.
-echo    [OK] All dependencies installed
-
-:: ============ Complete ============
-echo.
-echo ================================================================
-echo                    Installation Complete!
-echo ================================================================
-echo.
-echo  Next steps:
-echo    1. Edit .env file and add your GEMINI_API_KEY
-echo    2. Double-click start.bat to run
-echo.
-echo  Get API Key at:
-echo    https://aistudio.google.com/app/apikey
-echo.
-echo ================================================================
+echo        All dependencies installed ... [OK]
 echo.
 
-:: Create .env if needed
+:: ============ Config setup ============
 if not exist ".env" (
-    echo [!] Creating .env config file...
+    echo  [+] Configuration Setup
+    echo      Creating default .env file...
     copy .env.example .env >nul 2>&1
-    echo [OK] .env file created
     echo.
-    echo Press any key to open .env for editing...
-    pause >nul
-    notepad .env
-) else (
-    echo [OK] .env config file exists
+    echo      opening config file...
+    start notepad .env
 )
 
+:: ============ Finish ============
+color 0A
+cls
 echo.
-echo Now you can double-click start.bat to run!
+echo  ======================================================================
+echo.
+echo      INSTALLATION SUCCESSFUL!
+echo.
+echo      What to do next:
+echo      1. Ensure you added your API KEY in the opened .env file.
+echo      2. Run 'start.bat' to launch the application.
+echo.
+echo  ======================================================================
 echo.
 pause
