@@ -12,129 +12,135 @@ def get_manager(project):
     project_path = PROJECTS_DIR / project
     return WorldManager(project_path, state.rag_manager)
 
-# ============ API: 世界观设定库 (Worldbook) ============
+# ============ API: 统一卡片接口 (Worldbook Unified) ============
 
-@world_bp.route('/api/worldbuilding/<project>', methods=['GET'])
-def get_worldbuilding(project):
-    """获取世界观设定"""
-    wm = get_manager(project)
-    # 暂时只返回非角色的卡片作为“设定”
-    # 前端可能期待 {settings: [], categories: []} 格式
-    # 这里做适配
-    cards = wm.get_cards()
-    settings = [c.to_dict() for c in cards if c.card_type != CardType.CHARACTER]
-    
-    return jsonify({
-        "settings": settings,
-        "categories": ["地点", "势力", "道具", "规则", "历史", "其他"]
-    })
-
-
-@world_bp.route('/api/worldbuilding/<project>', methods=['POST'])
-def add_worldbuilding(project):
-    """添加设定"""
-    wm = get_manager(project)
-    data = request.json
-    
-    # 映射 category 到 CardType
-    cat_map = {
-        "地点": CardType.LOCATION,
-        "势力": CardType.FACTION,
-        "道具": CardType.ITEM,
-        "规则": CardType.CONCEPT,
-        "历史": CardType.EVENT,
-        "其他": CardType.CUSTOM
-    }
-    card_type = cat_map.get(data.get("category"), CardType.CUSTOM)
-    
-    card = WorldCard(
-        id=str(datetime.now().timestamp()).replace('.', '')[-8:], # 简单ID
-        name=data.get("name", ""),
-        card_type=card_type,
-        description=data.get("description", ""),
-        attributes={"details": data.get("details", "")} # 适配旧字段
-    )
-    
-    wm.add_card(card)
-    return jsonify({"success": True, "setting": card.to_dict()})
-
-# ============ API: 角色 (Characters) ============
-
-@world_bp.route('/api/characters/<project>', methods=['GET'])
-def get_characters(project):
-    """获取角色列表"""
-    wm = get_manager(project)
-    chars = wm.get_characters()
-    return jsonify([c.to_dict() for c in chars])
-
-@world_bp.route('/api/characters/<project>', methods=['POST'])
-def add_character(project):
-    """添加角色"""
-    wm = get_manager(project)
-    data = request.json
-    
-    # 适配 CharacterCard.create
-    card = wm.create_character(
-        name=data.get("name", ""),
-        description=data.get("description", ""),
-        gender=data.get("gender", ""),
-        age=data.get("age", ""),
-        appearance=data.get("appearance", ""),
-        personality=data.get("personality", ""),
-        background=data.get("background", ""),
-        abilities=data.get("abilities", []) # Assuming list
-    )
-    
-    return jsonify({"success": True, "character": card.to_dict()})
-
-@world_bp.route('/api/characters/<project>/<int:char_id>', methods=['PUT'])
-def update_character(project, char_id):
-    """更新角色"""
-    # 这里的 char_id 可能是 int 或 str，WorldManager 使用 str
-    # 但前端传过来的可能是 int (based on previous code `new_char['id'] = len(characters) + 1`)
-    # 需要兼容之前的 ID 格式
-    
-    wm = get_manager(project)
-    # 尝试找到对应的卡片
-    target_id = str(char_id)
-    # 如果之前的实现是用 1, 2, 3 这样的整数ID，这里需要小心
-    # 这里假设我们正在迁移或重构，可能需要重新索引
-    
-    # 简单遍历查找 (因为 ID 类型不匹配)
-    found_card = None
-    for card in wm._cards.values():
-        if str(card.id) == str(char_id):
-            found_card = card
-            break
-            
-    if not found_card:
-        # 尝试直接作为 key
-        found_card = wm.get_card(str(char_id))
+@world_bp.route('/api/world/<project>/cards', methods=['GET'])
+def get_all_cards(project):
+    """获取所有世界观卡片 (角色 + 设定)"""
+    try:
+        wm = get_manager(project)
+        cards = wm.get_cards() # Should return all cards
         
-    if found_card:
-        wm.update_card(found_card.id, request.json)
-        return jsonify({"success": True})
-    else:
-        return jsonify({"error": "Character not found"}), 404
-
-@world_bp.route('/api/characters/<project>/<int:char_id>', methods=['DELETE'])
-def delete_character(project, char_id):
-    """删除角色"""
-    wm = get_manager(project)
-    
-    # 同上查找逻辑
-    found_id = None
-    for card in wm._cards.values():
-        if str(card.id) == str(char_id):
-            found_id = card.id
-            break
+        # Ensure category field is present for frontend
+        result = []
+        for c in cards:
+            d = c.to_dict()
+            if 'category' not in d:
+                # Map type to category
+                type_map = {
+                    CardType.CHARACTER: 'character',
+                    CardType.LOCATION: 'location',
+                    CardType.FACTION: 'faction',
+                    CardType.ITEM: 'item',
+                    CardType.CONCEPT: 'lore',
+                    CardType.EVENT: 'history'
+                }
+                d['category'] = type_map.get(c.card_type, 'other')
+            result.append(d)
             
-    if not found_id: found_id = str(char_id)
-    
-    if wm.delete_card(found_id):
-        return jsonify({"success": True})
-    else:
-        return jsonify({"error": "Character not found"}), 404
+        return jsonify({"cards": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@world_bp.route('/api/world/<project>/cards', methods=['POST'])
+def add_card(project):
+    """添加卡片"""
+    try:
+        wm = get_manager(project)
+        data = request.json
+        category = data.get('category', 'other')
+        
+        # Map category to CardType
+        cat_map = {
+            'character': CardType.CHARACTER,
+            'location': CardType.LOCATION,
+            'faction': CardType.FACTION,
+            'item': CardType.ITEM,
+            'lore': CardType.CONCEPT,
+            'history': CardType.EVENT
+        }
+        card_type = cat_map.get(category, CardType.CUSTOM)
+        
+        if card_type == CardType.CHARACTER:
+             # Character fields
+             card = wm.create_character(
+                name=data.get("name", ""),
+                description=data.get("description", ""),
+                gender=data.get("gender", ""),
+                age=data.get("age", ""),
+                appearance=data.get("appearance", ""),
+                personality=data.get("personality", ""),
+                background=data.get("background", ""),
+                abilities=data.get("abilities", [])
+            )
+        else:
+            # Other cards
+             card = WorldCard(
+                id=str(datetime.now().timestamp()).replace('.', '')[-8:],
+                name=data.get("name", ""),
+                card_type=card_type,
+                description=data.get("description", ""),
+                attributes={"details": data.get("details", "")}
+            )
+             wm.add_card(card)
+             
+        # Return formatted for frontend
+        d = card.to_dict()
+        d['category'] = category
+        return jsonify({"success": True, "card": d})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@world_bp.route('/api/world/<project>/cards/<card_id>', methods=['PUT'])
+def update_card(project, card_id):
+    """更新卡片"""
+    try:
+        wm = get_manager(project)
+        data = request.json
+        if wm.update_card(card_id, data):
+             # Return updated card
+             card = wm.get_card(card_id)
+             d = card.to_dict()
+             # Re-inject category if missing (utils might not store it explicitly same way)
+             if 'category' not in d:
+                 # Simplified mapping back
+                 type_map = {
+                    CardType.CHARACTER: 'character',
+                    CardType.LOCATION: 'location',
+                    CardType.FACTION: 'faction',
+                    CardType.ITEM: 'item',
+                    CardType.CONCEPT: 'lore',
+                    CardType.EVENT: 'history'
+                 }
+                 d['category'] = type_map.get(card.card_type, 'other')
+             return jsonify({"success": True, "card": d})
+        else:
+             return jsonify({"error": "Card not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@world_bp.route('/api/world/<project>/cards/<card_id>', methods=['DELETE'])
+def delete_card(project, card_id):
+    """删除卡片"""
+    try:
+        wm = get_manager(project)
+        if wm.delete_card(card_id):
+            return jsonify({"success": True})
+        else:
+            return jsonify({"error": "Card not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@world_bp.route('/api/world/<project>/extract', methods=['POST'])
+def extract_world_info(project):
+    """从正文提取世界观"""
+    try:
+        # Stub for now, or implement using simple keyword extraction
+        # Real implementation would use LLM
+        return jsonify({"extracted": []}) 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # ============ API: RAG 索引管理 ============
 

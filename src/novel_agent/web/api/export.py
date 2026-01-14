@@ -122,6 +122,7 @@ def export_merged(project):
     })
 
 @export_bp.route('/api/download/<project>/<filename>')
+@export_bp.route('/api/export/<project>/download/<filename>') # Alias for frontend match
 def download_file(project, filename):
     """下载导出文件"""
     # Exporter usually saves to {project}/export or {project}/exports

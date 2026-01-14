@@ -203,13 +203,12 @@ def batch_create():
         return jsonify({"error": str(e)}), 500
 
 
-@gen_bp.route('/api/batch/start', methods=['POST'])
-def batch_start():
-    """开始批量任务 (流式)"""
-    data = request.json
-    job_id = data.get('job_id')
-    
+@gen_bp.route('/api/batch/progress/<job_id>', methods=['GET'])
+def batch_progress(job_id):
+    """批量生成进度 (SSE)"""
     if job_id not in state.batch_jobs:
+        # Initial check, might be race condition if just created
+        # But usually Create returns ID then FE connects
         return jsonify({"error": "任务不存在"}), 404
         
     job_info = state.batch_jobs[job_id]
@@ -218,7 +217,9 @@ def batch_start():
     
     def generate():
         try:
-            # generator.run_job 是个生成器，yield update dicts
+             # Run generator.run_job() which yields updates
+             # Note: run_job is a generator that executes one step per yield
+             # This blocks the thread, so Flask threaded=True is needed (which is default)
             for update in generator.run_job(job):
                 yield f"data: {json.dumps(update)}\n\n"
         except Exception as e:
@@ -229,6 +230,7 @@ def batch_start():
         mimetype='text/event-stream',
         headers={
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive'
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
         }
     )
