@@ -406,7 +406,7 @@ class MetaPromptGenerator:
 
     def analyze_inspiration_variants(self, inspiration: str) -> list:
         """
-        分析灵感，生成3个变体方案
+        分析灵感，生成3个变体方案 (JSON Mode)
         
         Args:
             inspiration: 用户输入的小说灵感
@@ -415,29 +415,27 @@ class MetaPromptGenerator:
             list: 包含3个方案的字典列表
         """
         prompt = META_PROMPT_VARIANTS_TEMPLATE.format(user_inspiration=inspiration)
-        # 临时提高temperature以增加多样性
+        
+        # 临时配置，启用 JSON 模式
         temp_config = GenerationConfig(
             temperature=0.9,
-            max_tokens=8192
+            max_tokens=8192,
         )
-        result = self.llm.generate(prompt, config=temp_config)
+        # Hack to inject mime type since Base config might not have it defined explicitly in type hints yet
+        setattr(temp_config, "response_mime_type", "application/json")
         
-        # 尝试解析JSON
-        import json
-        import re
-        
-        content = result.content
-        # 提取Markdown代码块中的JSON
-        match = re.search(r'```json\s*([\s\S]*?)\s*```', content)
-        if match:
-            json_str = match.group(1)
-        else:
-            json_str = content
-            
         try:
-            return json.loads(json_str)
-        except json.JSONDecodeError:
-            print(f"JSON解析失败: {content[:100]}...")
-            # Fallback: 尝试修复或返回空
+            result = self.llm.generate(prompt, config=temp_config)
+            content = result.content
+            
+            import json
+            # Gemini JSON mode usually returns raw JSON, but sometimes wraps in markdown
+            if content.startswith("```json"):
+                content = content.replace("```json", "").replace("```", "")
+            
+            return json.loads(content)
+            
+        except Exception as e:
+            print(f"JSON生成或解析失败: {e}")
             return []
 

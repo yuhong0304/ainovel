@@ -181,15 +181,26 @@ class ChapterOutlineGenerator:
     
     def _extract_script(self, outline: str, script_name: str) -> str:
         """从粗纲中提取指定剧本的内容"""
-        # 简单的文本提取
         lines = outline.split('\n')
         in_script = False
         script_lines = []
         
+        # Normalize name for search (e.g. "剧本1" -> match "剧本1" or "剧本 1")
+        import re
+        # script_name is like "剧本1"
+        script_num = re.search(r'\d+', script_name).group() if re.search(r'\d+', script_name) else ""
+        
+        # Regex to match "#### 剧本 1" or "#### 剧本1" or "## 剧本1"
+        start_pattern = re.compile(f"#{2,}\s*剧本\s*{script_num}")
+        # Regex to match next script header
+        next_pattern = re.compile(r"#{2,}\s*剧本\s*\d+")
+        
         for line in lines:
-            if script_name in line and ('剧本' in line or '####' in line):
+            if start_pattern.search(line):
                 in_script = True
-            elif in_script and line.startswith('#### 剧本'):
+                script_lines.append(line)
+            elif in_script and next_pattern.search(line):
+                # Found next script, stop
                 break
             elif in_script:
                 script_lines.append(line)

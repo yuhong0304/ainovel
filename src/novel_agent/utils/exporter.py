@@ -257,19 +257,20 @@ class NovelExporter:
         return output_path
     
     def _markdown_to_html(self, markdown_text: str) -> str:
-        """简单的 Markdown 转 HTML"""
-        html_parts = []
-        paragraphs = markdown_text.split('\n\n')
-        
-        for para in paragraphs:
-            para = para.strip()
-            if not para:
-                continue
-            # 简单的段落处理
-            para = para.replace('\n', '<br/>')
-            html_parts.append(f'<p>{para}</p>')
-        
-        return '\n'.join(html_parts)
+        """Markdown 转 HTML (使用 markdown 库)"""
+        try:
+            import markdown
+            return markdown.markdown(markdown_text)
+        except ImportError:
+            # Fallback if library missing
+            logger.warning("Markdown library not found, using simple fallback.")
+            html_parts = []
+            paragraphs = markdown_text.split('\n\n')
+            for para in paragraphs:
+                para = para.strip().replace('\n', '<br/>')
+                if para:
+                    html_parts.append(f'<p>{para}</p>')
+            return '\n'.join(html_parts)
     
     def export_all(self) -> Dict[str, Path]:
         """导出所有格式"""

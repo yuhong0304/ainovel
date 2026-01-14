@@ -37,7 +37,7 @@ while true; do
     echo -e "${CYAN}      NOVEL AGENT  -  AI POWERED WRITING ASSISTANT${NC}"
     echo ""
     echo -e "${CYAN}               +------------------------+${NC}"
-    echo -e "${CYAN}               |    Launcher v1.2.0     |${NC}"
+    echo -e "${CYAN}               |    Launcher v1.2.1     |${NC}"
     echo -e "${CYAN}               +------------------------+${NC}"
     echo ""
     echo -e "${CYAN}======================================================================${NC}"
@@ -97,8 +97,9 @@ while true; do
             echo "  URL: http://localhost:5000"
             echo ""
             # Set FLASK_DEBUG for the session
+            # Set FLASK_DEBUG for the session
             export FLASK_DEBUG=1
-            "$PYTHON_EXE" -m novel_agent.web.app
+            "$PYTHON_EXE" -m flask run --host=0.0.0.0 --port=5000
             read -p "Press Enter to return to menu..."
             ;;
         0)

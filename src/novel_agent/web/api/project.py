@@ -25,19 +25,38 @@ def list_projects():
         if p.is_dir() and not p.name.startswith('.'):
             # 获取项目元数据
             meta_path = p / "novel_config.yaml"
+            # 尝试从 config.json 读取标题
+            config_json_path = p / "config.json"
+            
             title = p.name
-            if meta_path.exists():
-                # 这里简单读取第一行或解析YAML
-                pass
+            if config_json_path.exists():
+                try:
+                    with open(config_json_path, 'r', encoding='utf-8') as f:
+                        cfg = json.load(f)
+                        title = cfg.get("title", p.name) or p.name
+                except:
+                    pass
             
             # 获取最后修改时间
             mtime = p.stat().st_mtime
             
+            # 计算字数
+            word_count = 0
+            content_dir = p / "content"
+            if content_dir.exists():
+                for f in content_dir.glob("*.md"):
+                    if f.is_file():
+                        try:
+                            word_count += len(f.read_text(encoding='utf-8'))
+                        except:
+                            pass
+            
             projects.append({
                 "id": p.name,
-                "name": p.name, # TODO: 从配置读取真实书名
+                "name": title, 
+                "folder": p.name,
                 "modified": datetime.fromtimestamp(mtime).isoformat(),
-                "word_count": 0 # TODO: 计算字数
+                "word_count": word_count 
             })
             
     # 按时间倒序
@@ -454,13 +473,35 @@ def generate_structure_master(name):
          if not state.llm:
               return jsonify({"error": "LLM not initialized"}), 500
               
-         # Retrieve MetaPrompt/SystemPrompt?
-         # TODO: Connect to actual pipeline
-         # For this fix, we simply return success to unblock frontend
-         # or we can do a simple dummy generation
+         # Initialize Generator
+         from novel_agent.pipeline.stage_1_master import MasterOutlineGenerator
          
-         return jsonify({"success": True, "message": "Structure generation started (Stub)"})
+         generator = MasterOutlineGenerator(
+             llm_client=state.llm,
+             prompt_manager=state.prompt_manager,
+             context_manager=state.context_manager
+         )
+         
+         # Load current project context
+         state.context_manager.load_project(name)
+         
+         # Generate
+         # master_outline contains user input/idea if passed from frontend
+         result_content = generator.generate(
+             user_input=master_outline or f"请为项目 {name} 生成一份完整的大纲",
+             additional_context=f"预计卷数: {volume_count}"
+         )
+         
+         # Save automatically
+         generator.save_outline(result_content)
+         
+         return jsonify({
+             "success": True, 
+             "message": "Structure generation completed",
+             "content": result_content
+         })
     except Exception as e:
+         print(f"Error generating structure: {e}")
          return jsonify({"error": str(e)}), 500
 
 @project_bp.route('/api/project/<name>/config', methods=['POST'])

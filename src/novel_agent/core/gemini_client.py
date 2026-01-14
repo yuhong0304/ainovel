@@ -19,6 +19,10 @@ from .llm_base import (
     GenerationResult
 )
 
+# Monkey Patch GenerationConfig if needed or ensure Base has it?
+# For now, we assume user passes extra kwargs or we extend the internal config
+
+
 # 设置日志
 logger = logging.getLogger(__name__)
 
@@ -223,7 +227,8 @@ class GeminiClient(BaseLLMClient):
             temperature=config.temperature,
             max_output_tokens=config.max_tokens,
             top_p=config.top_p,
-            top_k=config.top_k
+            top_k=config.top_k,
+            response_mime_type=getattr(config, "response_mime_type", "text/plain")
         )
     
     def _retry_with_backoff(self, func: Callable, *args, **kwargs) -> Any:

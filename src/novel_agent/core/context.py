@@ -161,10 +161,27 @@ class ContextManager:
             ids.append("summary_main")
             
         # 3. 索引已生成章节 (前文)
-        # TODO: 遍历 content 目录读取章节内容
+        content_dir = self.projects_dir / self._current_project.name / "content"
+        if content_dir.exists():
+            for content_file in content_dir.glob("*.md"):
+                # 排除非章节文件
+                if not content_file.name.startswith("ch"):
+                    continue
+                    
+                chapter_content = content_file.read_text(encoding="utf-8")
+                # 简单分块或整章存入 (这里整章存入，依赖 Chroma 分块或 LLM 上下文处理)
+                # 更好的方式是按场景分块，但这里先实现基础功能
+                docs.append(f"章节文件 {content_file.name}:\n{chapter_content}")
+                metas.append({
+                    "type": "chapter_content", 
+                    "filename": content_file.name,
+                    "project": self._current_project.name
+                })
+                ids.append(f"content_{self._current_project.name}_{content_file.stem}")
         
         if docs:
             self.rag.add_documents(docs, metas, ids)
+            print(f"Index updated: {len(docs)} documents indexed for project {self._current_project.name}")
 
     
     def create_project(self, name: str, **kwargs) -> ProjectConfig:

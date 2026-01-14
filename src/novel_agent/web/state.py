@@ -44,7 +44,11 @@ class AppState:
         self.prompt_manager: Optional[PromptManager] = None
         self.context_manager: Optional[ContextManager] = None
         self.rag_manager: Optional[RAGManager] = None
-        self.current_model: str = "gemini-2.0-flash-exp" # Default to a safe model or env
+        
+        from novel_agent.core.config import config as global_config
+        llm_conf = global_config.get_llm_config()
+        
+        self.current_model: str = llm_conf.get("model", "gemini-2.0-flash-exp")
         self.current_provider: str = "gemini"  # gemini | openai | claude
         
         # 生成进度队列
