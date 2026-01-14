@@ -1,4 +1,0 @@
-recursive-include src/novel_agent/web/templates *
-recursive-include src/novel_agent/web/static *
-recursive-include src/novel_agent/prompts *
-include README.md
