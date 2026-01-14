@@ -112,9 +112,9 @@ pip install flask flask-cors --upgrade -q
 echo        [........  ] Text Processing Tools ...
 pip install jinja2 rich pyyaml python-dotenv --upgrade -q
 
-echo        [..........] Novel Agent Core (Force Reinstall) ...
-:: Use --force-reinstall to ensure the new src structure is picked up correctly
-pip install -e . --force-reinstall -q
+echo        [..........] Novel Agent Core (Force Reinstall + All Features) ...
+:: Use --force-reinstall and [full] to ensure all dependencies (Export, OpenAI, Claude) are installed
+pip install -e .[full] --force-reinstall -q
 
 if errorlevel 1 (
     color 0C
@@ -123,7 +123,7 @@ if errorlevel 1 (
     echo.
     echo  Retrying in verbose mode to show errors:
     echo  ----------------------------------------
-    pip install -e . --force-reinstall
+    pip install -e .[full] --force-reinstall
     pause
     exit /b 1
 )
