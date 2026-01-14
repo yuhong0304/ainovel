@@ -89,6 +89,19 @@ if errorlevel 1 (
 echo        Environment activated ... [OK]
 echo.
 
+:: ============ Step 3.5: Clean Corrupt Packages ============
+echo  [3.5/5] Checking for Installation Residue...
+if exist ".venv\Lib\site-packages" (
+    pushd ".venv\Lib\site-packages"
+    for /d %%i in (~*) do (
+        echo        Cleaning up leftover: %%i
+        rd /s /q "%%i" >nul 2>&1
+    )
+    popd
+)
+echo        Cleanup complete ... [OK]
+echo.
+
 :: ============ Step 4: Upgrade Tools ============
 echo  [4/5] Establishing Core Tools...
 python -m pip install --upgrade pip -q
