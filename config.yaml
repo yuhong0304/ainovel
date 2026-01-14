@@ -54,3 +54,10 @@ cost_tracking:
   gemini_flash_output: 0.30
   gemini_pro_input: 1.25
   gemini_pro_output: 5.00
+
+# Web 服务设置
+# 可通过环境变量覆盖: WEB_HOST, WEB_PORT
+server:
+  host: "0.0.0.0"
+  port: 5000
+  debug: false

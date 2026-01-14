@@ -53,6 +53,19 @@ class ConfigLoader:
         # LLM 模型
         if os.getenv("GEMINI_MODEL"):
             self._config.setdefault("llm", {})["model"] = os.getenv("GEMINI_MODEL")
+            
+        # Web 服务
+        if os.getenv("WEB_HOST"):
+            self._config.setdefault("server", {})["host"] = os.getenv("WEB_HOST")
+        
+        if os.getenv("WEB_PORT"):
+            try:
+                self._config.setdefault("server", {})["port"] = int(os.getenv("WEB_PORT"))
+            except ValueError:
+                pass
+                
+        if os.getenv("DEBUG"):
+            self._config.setdefault("server", {})["debug"] = (os.getenv("DEBUG").lower() == "true")
     
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -94,6 +107,10 @@ class ConfigLoader:
     def get_cost_config(self) -> Dict[str, Any]:
         """获取成本追踪配置"""
         return self._config.get("cost_tracking", {})
+
+    def get_server_config(self) -> Dict[str, Any]:
+        """获取服务器配置"""
+        return self._config.get("server", {})
     
     def reload(self) -> None:
         """重新加载配置"""

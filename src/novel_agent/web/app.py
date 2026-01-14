@@ -52,19 +52,28 @@ def run_server():
     """启动Web服务器"""
     print("🚀 番茄小说Agent Web版启动中... (Refactored Modular Version)")
     state.initialize()
+    # Load Server Config
+    from novel_agent.core.config import config
+    server_conf = config.get_server_config()
+    
+    host = server_conf.get("host", "0.0.0.0")
+    port = server_conf.get("port", 5000)
+    debug = server_conf.get("debug", True)
+    
     print(f"✓ 模型: {state.current_model}")
+    print(f"✓ 监听: {host}:{port}")
     print(f"✓ 项目目录: {PROJECTS_DIR}")
-    print("\n访问: http://localhost:5000\n")
+    print(f"\n访问: http://localhost:{port}\n")
     
     # 确保在开发模式下能够找到模板
-    if not app.debug:
+    if not debug:
         import webbrowser
         try:
-            threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
+            threading.Timer(1.5, lambda: webbrowser.open(f"http://127.0.0.1:{port}")).start()
         except:
             pass
             
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True, use_reloader=False)
+    app.run(host=host, port=port, debug=debug, threaded=True, use_reloader=False)
 
 if __name__ == '__main__':
     run_server()
