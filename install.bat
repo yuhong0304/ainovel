@@ -115,20 +115,20 @@ echo        Please wait, downloading packages (this may take a while)...
 echo.
 
 echo        [..        ] Google Generative AI SDK ...
-pip install google-generativeai --upgrade -q
+pip install google-generativeai --upgrade
 
 echo        [....      ] ChromaDB Vector Database ...
-pip install chromadb --upgrade -q
+pip install chromadb --upgrade
 
 echo        [......    ] Web Framework (Flask) ...
-pip install flask flask-cors --upgrade -q
+pip install flask flask-cors --upgrade
 
 echo        [........  ] Text Processing Tools ...
-pip install jinja2 rich pyyaml python-dotenv --upgrade -q
+pip install jinja2 rich pyyaml python-dotenv --upgrade
 
 echo        [..........] Novel Agent Core (Force Reinstall + All Features) ...
 :: Use --force-reinstall and [full] to ensure all dependencies (Export, OpenAI, Claude) are installed
-pip install -e .[full] --force-reinstall -q
+pip install -e .[full] --force-reinstall
 
 if errorlevel 1 (
     color 0C

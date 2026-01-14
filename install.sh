@@ -68,20 +68,20 @@ echo "      Please wait, downloading packages..."
 echo ""
 
 echo -e "      [..        ] Google Generative AI SDK"
-pip install google-generativeai --upgrade -q
+pip install google-generativeai --upgrade
 
 echo -e "      [....      ] ChromaDB Vector Database"
-pip install chromadb --upgrade -q
+pip install chromadb --upgrade
 
 echo -e "      [......    ] Web Framework (Flask)"
-pip install flask flask-cors --upgrade -q
+pip install flask flask-cors --upgrade
 
 echo -e "      [........  ] Text Processing Tools"
-pip install jinja2 rich pyyaml python-dotenv --upgrade -q
+pip install jinja2 rich pyyaml python-dotenv --upgrade
 
 echo -e "      [..........] Novel Agent Core (Full Features)"
 # Install with [full] to support Export, OpenAI, etc.
-pip install -e .[full] --upgrade -q
+pip install -e .[full] --upgrade
 
 if [ $? -ne 0 ]; then
     echo ""
