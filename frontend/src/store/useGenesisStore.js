@@ -17,7 +17,7 @@ const useGenesisStore = create((set) => ({
     generateProposals: async (inspiration) => {
         set({ isLoadingProposals: true, error: null })
         try {
-            const { data } = await client.post('/genesis/propose', { inspiration })
+            const { data } = await client.post('/api/genesis/propose', { inspiration })
             set({ proposals: data.proposals || [], isLoadingProposals: false })
         } catch (err) {
             set({ error: err.response?.data?.error || err.message, isLoadingProposals: false })
@@ -27,7 +27,7 @@ const useGenesisStore = create((set) => ({
     initializeProject: async (project_name, config_yaml) => {
         set({ isInitializing: true, error: null })
         try {
-            await client.post('/genesis/init', { project_name, config_yaml })
+            await client.post('/api/genesis/init', { project_name, config_yaml })
             set({ isInitializing: false })
             return true
         } catch (err) {
